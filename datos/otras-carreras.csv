@@ -1,33 +1,134 @@
-# Carreras de los participantes fuera de las jornadas de datos/jornadas (otros hipódromos o fechas). Separador ;
-# g = terreno: 0 bueno, 1 bueno a blando, 2 blando, 3 muy blando. Si se deja r vacío, la fila manda sobre lo que diga la jornada del mismo día.
-date;course;r;dist;cat;of;name;pos;g;kg;txt
-2026-09-20;La Zarzuela;1;1400;C;9;MELLO MELLO;2;;57.5;
-2026-09-20;La Zarzuela;3;2200;D;11;DANCELOT;1;;62;
-2026-09-20;La Zarzuela;4;2200;D;11;NAT IMPACT;1;;57.5;
-2026-09-20;La Zarzuela;4;2200;D;11;EOLO;3;;59.5;
-2026-09-24;La Zarzuela;1;1600;D;8;ZAMA;1;;55.5;
-2026-09-24;La Zarzuela;1;1600;D;8;ADHONOREM;2;;55.5;
-2026-09-27;La Zarzuela;1;1600;C;13;SKYRED;6;;57;
-2026-09-27;La Zarzuela;1;1600;C;13;DJIANGO;2;;55.5;
-2026-09-27;La Zarzuela;2;1500;D;14;DIAS FELICES;4;;59.5;
-2026-09-27;La Zarzuela;4;1500;D;12;AMAZONICO;1;;61.5;
-2026-09-27;La Zarzuela;4;1500;D;12;ANOTHER ROSE;12;;62.5;
-2026-09-27;La Zarzuela;4;1500;D;12;LADY COCODY;10;;60.5;
-2026-09-27;La Zarzuela;5;2800;A;8;LIGHT L'AUDRIELLE;5;;57;
-2026-09-27;La Zarzuela;6;2200;B;8;KINDLEO;8;;60;
-2026-09-27;La Zarzuela;6;2200;B;8;MASTER CATH;6;;60;
-2026-10-04;La Zarzuela;1;1500;C;6;REQUEJO LEGEND;1;;57;
-2026-10-04;La Zarzuela;1;1500;C;6;MELLO MELLO;3;;56.5;
-2026-10-04;La Zarzuela;1;1500;C;6;CHISTERA;4;;54;
-2026-09-02;San Sebastián;;1600;C;6;LADY COCODY;3;0;;
-2026-09-10;La Zarzuela;;1500;C;8;NEVER EVER;3;;;
-2026-09-10;La Zarzuela;;2400;C;9;LIGHT L'AUDRIELLE;5;;;
-2026-09-10;La Zarzuela (fibra);;1200;D;7;CUDILLERO;5;;;
-2026-09-30;San Sebastián;;1400;C;8;CUDILLERO;5;1;;
-2026-09-30;San Sebastián;;2200;C;7;SWEET WISH;1;1;;
-2026-10-02;Dax (Francia);;2300;FR;8;RONCAL;2;2;;GP de la Ville de Dax
-2026-10-18;La Zarzuela;;1600;;12;ANOTHER ROSE;6;;;
-2026-10-18;La Zarzuela;;;;18;ASAHI;11;;;
-2026-10-18;La Zarzuela;;;;18;NEVER EVER;9;;;
-2026-10-18;La Zarzuela;;;;14;BALOOK;7;;;
-2026-10-25;La Zarzuela;;;;7;REQUEJO LEGEND;7;;;
+# Carreras de los participantes que no están en datos/jornadas (otros hipódromos, otras fechas, temporadas anteriores).
+# Fuente principal: base de datos de A Galopar (agalopar.com, revista nº 196 y fichas de caballos). Separador ;
+# r = código de carrera de A Galopar (sirve para juntar a los caballos que corrieron la misma carrera).
+# cat por importe del 1er premio: LI ≥ 50.000, LL 35.000–49.999, A 24.000–34.999, B 15.000–23.999, C 8.000–14.999, D 3.500–7.999; FR/GB = extranjero.
+# g = terreno: -1 duro, 0 bueno, 1 algo blando / bueno a blando, 2 blando, 3 pesado / muy pesado; vacío en arena o si no se sabe.
+# Las carreras de La Zarzuela de las fechas que ya están en datos/jornadas sólo se usan para completar el puesto exacto (6º en adelante).
+date;course;r;dist;cat;of;name;pos;g;kg;txt;j
+2026-10-18;La Zarzuela;362;1600;D;11;ANOTHER ROSE;6;0;58.5;;H. Boutin
+2026-09-27;La Zarzuela;338;1500;D;12;ANOTHER ROSE;12;0;62.5;;S. Donohoe
+2026-06-03;La Teste (Francia);E603;1600;FR;16;ANOTHER ROSE;7;0;57.5;;V. Seguy
+2026-09-02;San Sebastián;305;1600;D;6;LADY COCODY;3;0;59;;J. Gelabert
+2026-09-27;La Zarzuela;338;1500;D;12;LADY COCODY;10;0;60.5;;J.C. Diestra
+2026-11-01;La Zarzuela;374;1500;D;16;LADY COCODY;3;0;62.5;;A. Gutiérrez Val
+2026-03-15;La Zarzuela;55;1400;C;8;CUDILLERO;7;0;59;;V. Janacek
+2026-09-10;La Zarzuela (arena);317;1200;D;7;CUDILLERO;5;;58;;D. Sikorova
+2026-09-30;San Sebastián;343;1400;D;8;CUDILLERO;5;0;59.5;;B. Fayos
+2026-05-17;La Zarzuela;131;1600;D;15;JUGLAR;3;0;56.5;;V. Janacek
+2026-06-07;La Zarzuela;149;1800;D;11;JUGLAR;1;0;57;;R. Sousa
+2026-11-08;La Zarzuela;383;1800;D;7;JUGLAR;6;0;57;;N. Saccu
+2026-05-01;La Zarzuela;113;2100;B;9;ZAMA;8;0;56;;J. Gelabert
+2026-09-24;La Zarzuela;330;1600;D;7;ZAMA;1;0;56;;J. Gelabert
+2026-10-25;La Zarzuela;366;1800;C;8;ZAMA;3;0;54;;J. Gelabert
+2026-09-27;La Zarzuela;336;1500;D;13;DIAS FELICES;4;0;59.5;;R.N. Valle
+2026-10-25;La Zarzuela;369;1200;D;10;DIAS FELICES;1;0;59;;R.N. Valle
+2026-11-08;La Zarzuela;381;1100;C;12;DIAS FELICES;7;0;53;;V. Alonso V.
+2026-08-23;Sanlúcar (arena);291;1600;D;11;ASAHI;11;;58.5;;Sr. De Eusebio
+2026-10-18;La Zarzuela;361;1600;D;17;ASAHI;11;0;56.5;;E. Gutiérrez
+2026-11-01;La Zarzuela;374;1500;D;16;ASAHI;2;0;59;;J.C. Diestra
+2026-03-15;La Zarzuela;57;1600;C;9;ADHONOREM;6;0;56;;B. Fayos
+2026-04-12;La Zarzuela;81;1600;C;15;ADHONOREM;7;0;55.5;;A. Gutiérrez Val
+2026-04-26;La Zarzuela;101;1400;D;20;ADHONOREM;9;1;55.5;;V.M. Valenzuela
+2026-05-17;La Zarzuela;131;1600;D;15;ADHONOREM;8;0;55.5;;V. Seguy
+2026-06-20;La Zarzuela;166;1400;D;14;ADHONOREM;6;0;56;;A. Gavilán
+2026-09-24;La Zarzuela;330;1600;D;7;ADHONOREM;2;0;56;;R.N. Valle
+2026-10-18;La Zarzuela;360;1600;D;13;ADHONOREM;1;0;54.5;;D. Sikorova
+2026-11-22;La Zarzuela;391;1400;D;10;ADHONOREM;8;3;59;;I. Melgarejo
+2026-08-30;San Sebastián;301;2000;D;7;SWEET WISH;4;0;58.5;;E.A. Rodríguez
+2026-09-06;San Sebastián;310;2000;D;8;SWEET WISH;7;0;48.5;;D. Rodríguez
+2026-09-30;San Sebastián;342;2200;D;7;SWEET WISH;1;0;48;;D. Rodríguez
+2026-11-08;La Zarzuela;382;2000;A;12;KINDLEO;6;0;58.5;;V. Alonso V.
+2026-11-01;La Zarzuela;377;3200;C;10;DANCELOT;1;0;53;;V. Alonso V.
+2026-11-01;La Zarzuela;377;3200;C;10;LIGHT L'AUDRIELLE;4;0;58.5;;J. Gelabert
+2026-11-01;La Zarzuela;377;3200;C;10;RONCAL;6;0;63;;V. Janacek
+2026-11-01;La Zarzuela;377;3200;C;10;HELIOPOLIS;7;0;61.5;;Srta. Mora-Figueroa
+2026-11-01;La Zarzuela;377;3200;C;10;DON BOSCO;10;0;57.5;;J. Zambudio
+2026-10-25;La Zarzuela;368;2200;C;13;NAT IMPACT;4;0;59.5;;B. Fayos
+2026-10-25;La Zarzuela;368;2200;C;13;EOLO;5;0;58.5;;I. Melgarejo
+2026-10-18;La Zarzuela;363;2400;LL;13;SIRJAN;3;0;60;;H. Boutin
+2026-10-18;La Zarzuela;363;2400;LL;13;KINDLEO;4;0;60;;V. Alonso V.
+2026-10-18;La Zarzuela;363;2400;LL;13;MASTER CATH;6;0;60;;N. de Julián
+2026-10-18;La Zarzuela;363;2400;LL;13;SHACKLETON;8;0;60;;H. Crouch
+2026-09-27;La Zarzuela;340;2200;B;8;KINDLEO;8;0;60;;V. Alonso V.
+2026-09-27;La Zarzuela;340;2200;B;8;MASTER CATH;6;0;60;;B. Fayos
+2026-09-27;La Zarzuela;339;2800;A;8;LIGHT L'AUDRIELLE;5;0;57;;R.N. Valle
+2026-09-20;La Zarzuela;327;2200;D;11;NAT IMPACT;1;0;57.5;;B. Fayos
+2026-09-20;La Zarzuela;327;2200;D;11;EOLO;3;0;59.5;;N. Saccu
+2026-09-20;La Zarzuela;326;2200;D;11;DANCELOT;1;0;62;;V. Janacek
+2026-09-10;La Zarzuela;315;2400;C;8;LIGHT L'AUDRIELLE;5;0;59;;R. Sousa
+2026-09-13;San Sebastián;323;2800;B;7;CHERGUI;1;0;59;;S. Le Quilleuc
+2026-09-13;San Sebastián;323;2800;B;7;SHACKLETON;3;0;59;;V. Janacek
+2026-09-13;San Sebastián;323;2800;B;7;DON BOSCO;6;0;59;;J. Zambudio
+2026-09-02;San Sebastián;304;2400;D;6;DON BOSCO;1;0;59.5;;J. Zambudio
+2026-09-02;San Sebastián;304;2400;D;6;DANCELOT;4;0;56.5;;V. Alonso V.
+2026-08-30;San Sebastián;298;2000;D;4;RONCAL;1;0;60;;Sr. De Eusebio
+2026-08-15;San Sebastián;277;2400;LL;12;SIRJAN;2;0;59;;R. Sousa
+2026-08-15;San Sebastián;277;2400;LL;12;SHACKLETON;3;0;59;;I. Melgarejo
+2026-08-15;San Sebastián;277;2400;LL;12;CHERGUI;8;0;59;;A. Werlé
+2026-08-15;San Sebastián;277;2400;LL;12;MASTER CATH;9;0;59;;Sr. Sarabia
+2026-07-25;San Sebastián;225;2200;D;8;NAT IMPACT;3;-1;59.5;;B. Fayos
+2026-06-27;La Zarzuela;179;2500;LI;10;SIRJAN;2;0;58.5;;J. Gelabert
+2026-06-27;La Zarzuela;179;2500;LI;10;SHACKLETON;4;0;58.5;;S. Mazur
+2026-04-16;San Sebastián;88;2200;D;11;DON BOSCO;7;2;55;;J. Zambudio
+2026-04-16;San Sebastián;88;2200;D;11;HELIOPOLIS;9;2;63;;I. Melgarejo
+2026-04-05;La Zarzuela;76;2800;C;8;SHACKLETON;2;0;56;;V. Janacek
+2026-04-05;La Zarzuela;76;2800;C;8;CHERGUI;4;0;58;;V.M. Valenzuela
+2026-04-05;La Zarzuela;76;2800;C;8;HELIOPOLIS;5;0;55.5;;I. Melgarejo
+2026-04-05;La Zarzuela;76;2800;C;8;KINDLEO;8;0;57;;R. Sousa
+2025-09-14;La Zarzuela;345;2300;D;7;EOLO;1;0;59;;J. Gelabert
+2026-11-02;Nantes (Francia);E1224;2400;FR;;CHERGUI;6;2;57.5;;S. Le Quilleuc
+2026-10-02;Dax (Francia);E1100;2300;FR;8;RONCAL;2;1;56;;R. Dubord
+2026-10-02;Dax (Francia);E1100;2300;FR;8;CHERGUI;3;1;57.5;;S. Le Quilleuc
+2026-11-08;La Zarzuela;383;1800;D;7;BALOOK;5;0;57.5;;J. Plateaux
+2026-11-08;La Zarzuela;379;1600;C;12;AMAZONICO;1;0;60.5;;V. Alonso V.
+2026-11-01;La Zarzuela;375;1500;D;12;SHINE SUN;3;0;62;;D. Sikorova
+2026-11-01;La Zarzuela;373;1800;C;7;SILENT FAITH;1;0;54;;D. Sikorova
+2026-11-01;La Zarzuela;373;1800;C;7;SKYRED;2;0;57;;J.C. Diestra
+2026-11-01;La Zarzuela;373;1800;C;7;MELLO MELLO;3;0;57;;V. Janacek
+2026-11-01;La Zarzuela;373;1800;C;7;DJIANGO;4;0;57;;J. Gelabert
+2026-11-01;La Zarzuela;373;1800;C;7;STATE KING;5;0;57;;E.A. Rodríguez
+2026-11-01;La Zarzuela;373;1800;C;7;SIGGY MARINE;7;0;55.5;;V. Alonso V.
+2026-11-01;La Zarzuela;372;1200;D;11;BALLISTIC MISSILE;2;0;58;;D. Ferreira
+2026-10-25;La Zarzuela;370;1600;A;7;REQUEJO LEGEND;7;0;57;;V.M. Valenzuela
+2026-10-18;La Zarzuela;361;1600;D;17;NEVER EVER;9;0;61;;G. Arguinzones
+2026-10-18;La Zarzuela;360;1600;D;13;BALOOK;7;0;55.5;;S. Le Quilleuc
+2026-10-04;La Zarzuela;347;1500;C;6;REQUEJO LEGEND;1;2;57;;A. Gutiérrez Val
+2026-10-04;La Zarzuela;347;1500;C;6;MELLO MELLO;3;2;56.5;;V. Janacek
+2026-10-04;La Zarzuela;347;1500;C;6;CHISTERA;4;2;54;;D. Sikorova
+2026-09-27;La Zarzuela;338;1500;D;12;AMAZONICO;1;0;61.5;;R. Sousa
+2026-09-27;La Zarzuela;335;1600;C;13;DJIANGO;2;0;55.5;;D. Ferreira
+2026-09-27;La Zarzuela;335;1600;C;13;SKYRED;6;0;57;;S. Donohoe
+2026-09-20;La Zarzuela;324;1400;C;9;MELLO MELLO;2;0;57.5;;V. Janacek
+2026-09-13;San Sebastián;320;1600;D;8;REQUEJO LEGEND;1;0;58;;A. Gutiérrez Val
+2026-09-13;San Sebastián;320;1600;D;8;CHISTERA;3;0;53.5;;D. Sikorova
+2026-09-10;La Zarzuela;314;1500;C;7;NEVER EVER;3;0;57;;R. Sousa
+2026-09-06;San Sebastián;308;1600;D;4;SHINE SUN;2;0;61;;J. Gelabert
+2026-08-23;San Sebastián;297;1400;C;6;SHINE SUN;2;0;56.5;;J. Gelabert
+2026-08-22;Sanlúcar (arena);286;1600;D;7;NEVER EVER;4;;60;;J. Gelabert
+2026-08-10;Sanlúcar (arena);265;1800;D;7;NEVER EVER;1;;58.5;;J. Gelabert
+2026-07-05;San Sebastián;189;1300;D;6;STRIVENA;4;0;57;;J.C. Diestra
+2026-06-20;La Zarzuela;166;1400;D;14;DUKE OF CUMBERLAND;1;0;57.5;;J. Gelabert
+2026-06-20;La Zarzuela;166;1400;D;14;AMAZONICO;2;0;56.5;;V. Alonso V.
+2026-06-20;La Zarzuela;165;1400;C;6;MELLO MELLO;1;0;56;;V. Janacek
+2026-06-20;La Zarzuela;165;1400;C;6;SKYRED;2;0;56.5;;R. Sousa
+2026-06-07;La Zarzuela;149;1800;D;11;AMAZONICO;3;0;57;;A. Werlé
+2026-05-17;La Zarzuela;131;1600;D;15;LORD DIXIE;2;0;57;;R.N. Valle
+2026-04-26;La Zarzuela;101;1400;D;20;LORD JINKS;1;1;57;;I. Mendizábal
+2026-04-26;La Zarzuela;101;1400;D;20;LORD DIXIE;3;1;57;;F. Verón
+2026-04-12;La Zarzuela;81;1600;C;15;LORD JINKS;3;0;57;;R. Sousa
+2026-04-12;La Zarzuela;81;1600;C;15;DUKE OF CUMBERLAND;4;0;57;;J. Gelabert
+2026-04-12;La Zarzuela;81;1600;C;15;NEVER EVER;5;0;57;;B. Fayos
+2026-03-15;La Zarzuela;57;1600;C;9;LORD DIXIE;3;0;57;;R. Sousa
+2026-03-15;La Zarzuela;55;1400;C;8;DUKE OF CUMBERLAND;6;0;57.5;;D. Sikorova
+2026-03-08;La Zarzuela;50;1600;D;11;LORD JINKS;5;2;57;;R. Sousa
+2026-09-11;Moulins (Francia);E1001;1950;FR;9;STATE KING;3;2;56.5;;M. Favriaux
+2026-08-26;La Teste (Francia);E939;1600;FR;13;STATE KING;10;0;56.5;;S. Le Quilleuc
+2025-10-08;Kempton (GB);E1254;1200;GB;9;BALLISTIC MISSILE;1;;62;;R. Ryan
+2025-08-21;York (GB);E1032;1400;GB;18;BALLISTIC MISSILE;6;-1;59.5;;K. Shoemark
+2026-06-25;La Zarzuela (arena);173;2400;D;;DANCELOT;6;;62;;V. Janacek
+2026-06-14;La Zarzuela;158;2400;D;;DANCELOT;7;0;53.5;;V. Alonso V.
+2026-05-03;La Zarzuela;114;2100;D;;DANCELOT;8;2;56;;V. Janacek
+2026-04-05;La Zarzuela;75;2100;C;;DANCELOT;7;0;57;;V. Alonso V.
+2025-12-23;La Zarzuela (arena);444;1700;D;;DANCELOT;1;;56;;V. Janacek
+2025-12-14;Dos Hermanas;435;1600;D;;DANCELOT;4;0;54;;V. Alonso V.
+2025-11-30;La Zarzuela;426;1600;C;;DANCELOT;8;2;57;;J. E. Leonardo

@@ -20,14 +20,15 @@ const DREF=CARTA.fecha.slice(8,10)+"/"+CARTA.fecha.slice(5,7);
 const csv=fs.readFileSync("datos/otras-carreras.csv","utf8").split("\n").filter(l=>l.trim()&&!l.startsWith("#"));
 const cols=csv.shift().split(";").map(s=>s.trim());
 const RUNS_EXTRA=csv.map(l=>{ const v=l.split(";"), o={}; cols.forEach((c,i)=>{ const x=(v[i]??"").trim(); if(x==="") return;
-  o[c]=["r","dist","of","g","kg"].includes(c)?+x:c==="pos"&&/^\d+$/.test(x)?+x:x; }); return o; });
+  o[c]=["dist","of","g","kg"].includes(c)?+x:c==="pos"&&/^\d+$/.test(x)?+x:x; }); return o; });
 const D={VISITORS:CARTA.visitantes||{}};
 // Estado de la pista por jornada (solo La Zarzuela; las de fuera llevan g en otras-carreras.csv)
-const GOING={}; for(const l of fs.readFileSync("datos/terreno.csv","utf8").split("\n")){ const t=l.trim(); if(!t||t.startsWith("#")||t.startsWith("fecha")) continue;
-  const [f,hip,g]=t.split(";"); if(g!==undefined&&g.trim()!==""&&/Zarzuela/i.test(hip||"La Zarzuela")) GOING[f.trim()]=+g; }
+const GOING={}, GOING_OTHER={}; for(const l of fs.readFileSync("datos/terreno.csv","utf8").split("\n")){ const t=l.trim(); if(!t||t.startsWith("#")||t.startsWith("fecha")) continue;
+  const [f,hip,g]=t.split(";"); if(g!==undefined&&g.trim()!==""&&/Zarzuela/i.test(hip||"La Zarzuela")) GOING[f.trim()]=+g; else if(g!==undefined&&g.trim()!=="") GOING_OTHER[f.trim()+"|"+(hip||"").trim()]=+g; }
 M.setGoing(GOING);
 const nGoing=J.filter(d=>GOING[M.isoOf(d)]!=null).length;
 console.log("jornadas con estado de pista:",nGoing,"de",J.length);
+for(const e of RUNS_EXTRA) if(e.g==null&&GOING_OTHER[e.date+"|"+e.course]!=null) e.g=GOING_OTHER[e.date+"|"+e.course];
 const GROUPS=M.meetingGroups(train,RUNS_EXTRA,CARTA.carreras);
 console.log("grupos de carreras para rivales:",GROUPS.length);
 

@@ -1,16 +1,40 @@
-# Estado de la pista de cada jornada. terreno: 0 bueno, 1 bueno a blando, 2 blando, 3 pesado/muy blando (vacío = no se sabe).
-# Se usa para el factor terreno de cada carrera anterior y, con 3 o más jornadas conocidas, para entrenar su peso.
-# La web del hipódromo no publica el parte de la pista: anótalo cada domingo (cerrar_jornada.py --terreno N lo hace solo).
+# Estado de la pista de cada jornada (hierba). terreno: -1 duro, 0 bueno, 1 algo blando / bueno a blando, 2 blando, 3 pesado / muy pesado.
+# Fuente: A Galopar (revista nº 196 y fichas/resultados de agalopar.com). Desde ahora, cerrar_jornada.py --terreno N lo apunta solo.
 fecha;hipodromo;terreno;fuente
-2026-09-10;La Zarzuela;;
-2026-09-20;La Zarzuela;;
-2026-09-24;La Zarzuela;;
-2026-09-27;La Zarzuela;;
-2026-10-04;La Zarzuela;;
-2026-10-11;La Zarzuela;;
-2026-10-18;La Zarzuela;;
-2026-10-25;La Zarzuela;;
-2026-11-01;La Zarzuela;;
-2026-11-08;La Zarzuela;;
-2026-11-15;La Zarzuela;;
-2026-11-22;La Zarzuela;;
+2025-11-30;La Zarzuela;2;A Galopar
+2026-03-08;La Zarzuela;2;A Galopar
+2026-03-15;La Zarzuela;0;A Galopar
+2026-04-05;La Zarzuela;0;A Galopar
+2026-04-12;La Zarzuela;0;A Galopar
+2026-04-26;La Zarzuela;1;A Galopar
+2026-05-01;La Zarzuela;0;A Galopar
+2026-05-03;La Zarzuela;2;A Galopar
+2026-05-15;La Zarzuela;0;A Galopar
+2026-05-17;La Zarzuela;0;A Galopar
+2026-06-07;La Zarzuela;0;A Galopar
+2026-06-14;La Zarzuela;0;A Galopar
+2026-06-20;La Zarzuela;0;A Galopar
+2026-06-27;La Zarzuela;0;A Galopar
+2026-09-10;La Zarzuela;0;A Galopar
+2026-09-20;La Zarzuela;0;A Galopar
+2026-09-24;La Zarzuela;0;A Galopar
+2026-09-27;La Zarzuela;0;A Galopar
+2026-10-04;La Zarzuela;2;A Galopar
+2026-10-11;La Zarzuela;1;A Galopar
+2026-10-18;La Zarzuela;0;A Galopar
+2026-10-25;La Zarzuela;0;A Galopar
+2026-11-01;La Zarzuela;0;A Galopar
+2026-11-08;La Zarzuela;0;A Galopar
+2026-11-15;La Zarzuela;3;A Galopar
+2026-11-22;La Zarzuela;3;A Galopar
+2026-04-16;San Sebastián;2;A Galopar
+2026-07-05;San Sebastián;0;A Galopar
+2026-07-25;San Sebastián;-1;A Galopar
+2026-08-02;San Sebastián;-1;A Galopar
+2026-08-15;San Sebastián;0;A Galopar
+2026-08-23;San Sebastián;0;A Galopar
+2026-08-30;San Sebastián;0;A Galopar
+2026-09-02;San Sebastián;0;A Galopar
+2026-09-06;San Sebastián;0;A Galopar
+2026-09-13;San Sebastián;0;A Galopar
+2026-09-30;San Sebastián;0;A Galopar

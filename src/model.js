@@ -5,11 +5,11 @@ const FPTS = {1:1,2:.72,3:.55,4:.42,5:.33,6:.25,7:.18,8:.13,9:.1};
 function posPts(p){ const s=String(p).trim(); if(/^(NP|P|C|Qdo|Ddo|Dto|Desc|TBE)$/i.test(s)) return .05; const n=parseInt(s,10); if(isNaN(n)) return .1; return FPTS[n] ?? .06; }
 // Categorías españolas por importe del primer premio: Listed internacional ≥ 50.000 €, Listed local 35.000–49.999,
 // A 24.000–34.999, B 15.000–23.999, C 8.000–14.999, D 3.500–7.999. FR = carrera en Francia (sin categoría española).
-const CAT = {LI:6,LL:5,A:4,FR:3,B:3,C:2,D:1};
+const CAT = {LI:6,LL:5,A:4,FR:3,GB:3,B:3,C:2,D:1};
 const CAT_INFO = {LI:["Listed internacional","1er premio ≥ 50.000 €"],LL:["Listed local","1er premio 35.000–49.999 €"],A:["Categoría A","1er premio 24.000–34.999 €"],
-  B:["Categoría B","1er premio 15.000–23.999 €"],C:["Categoría C","1er premio 8.000–14.999 €"],D:["Categoría D","1er premio 3.500–7.999 €"],FR:["Francia","sin categoría española"]};
+  B:["Categoría B","1er premio 15.000–23.999 €"],C:["Categoría C","1er premio 8.000–14.999 €"],D:["Categoría D","1er premio 3.500–7.999 €"],FR:["Francia","sin categoría española"],GB:["Gran Bretaña","sin categoría española"]};
 const catName=c=>c&&CAT_INFO[c]?CAT_INFO[c][0]:"categoría desconocida";
-const catShort=c=>c==="LI"?"Listed int.":c==="LL"?"Listed local":c==="FR"?"Francia":c?"Cat. "+c:"cat. ?";
+const catShort=c=>c==="LI"?"Listed int.":c==="LL"?"Listed local":c==="FR"?"Francia":c==="GB"?"Gran Bretaña":c?"Cat. "+c:"cat. ?";
 const TERR_NAMES = ["Bueno","Bueno a blando","Blando","Pesado"];
 const BASE_T = {bueno:0,bb:1,blando:2,pesado:3};
 const CIELO = {
@@ -60,7 +60,7 @@ let REF_DATE="2026-11-29", WIN_FROM="2026-08-31"; const HIST_N=5, WIN_DAYS=365;
 // Fecha de la carta: las carreras cuentan si son de los WIN_DAYS días anteriores
 function setRefDate(iso){ REF_DATE=iso; WIN_FROM=new Date(Date.parse(iso)-WIN_DAYS*864e5).toISOString().slice(0,10); return WIN_FROM; }
 const getWin=()=>({REF_DATE,WIN_FROM});
-const GOING=["bueno","bueno a blando","blando","muy blando"];
+const GOING={"-1":"duro",0:"bueno",1:"bueno a blando",2:"blando",3:"pesado"};
 // "dd/mm" (sin año: el más reciente que no pase de la fecha de la carta) o "dd/mm/aa"
 function isoOf(d){ const m=/^(\d\d)\/(\d\d)(?:\/(\d\d))?$/.exec(String(d||"")); if(!m) return null;
   if(m[3]) return `20${m[3]}-${m[2]}-${m[1]}`; let y=+REF_DATE.slice(0,4); if(`${y}-${m[2]}-${m[1]}`>REF_DATE) y--; return `${y}-${m[2]}-${m[1]}`; }
@@ -74,7 +74,7 @@ function buildHist(h, train, J, extra, from, maxN){
   const add=(r,pri)=>{ if(!r.date||r.date<from||r.date>=REF_DATE) return; if(/^(NP|TBE)$/i.test(String(r.pos))) { by[r.date]={skip:true,pri:9}; return; }
     const o=by[r.date]; if(o&&o.skip) return; by[r.date]=!o?{...r,pri}:pri>o.pri?{...o,...r,pri}:{...r,...o}; };
   for(const a of autoRuns(h.name,train,J.length,J)) add({...a,date:isoOf(a.d),course:"La Zarzuela"},1);
-  for(const e of extra) if(normName(e.name)===key) add({...e,course:e.course||"La Zarzuela"},e.r?2:3);
+  for(const e of extra) if(normName(e.name)===key) add({...e,course:e.course||"La Zarzuela"},5);
   for(const m of (h.runs||[])){ const iso=isoOf(m.d); if(iso) add({...m,date:iso,course:courseOf(m)},4); }
   return Object.values(by).filter(r=>!r.skip).map(r=>{ const {pri,auto,...x}=r; return {...x,d:ddmm(r.date)}; })
     .sort((a,b)=>a.date<b.date?1:-1).slice(0,maxN||HIST_N);
@@ -100,13 +100,13 @@ function meetingGroups(train, extra, card){
   const addRun=(name,x)=>{ if(!x.date||/^(NP|TBE)$/i.test(String(x.pos))) return; const lz=/Zarzuela/.test(x.course||"");
     if(lz&&trainDates.has(x.date)){ // esa jornada ya está entera: solo se aprovecha el puesto exacto si allí figuraba como «6º o peor»
       const p=parseInt(String(x.pos),10), n=normName(name);
-      if(!isNaN(p)) for(const k in G){ if(!k.startsWith(x.date+"|La Zarzuela|")) continue; const e=G[k].ent.find(e=>e.name===n); if(e&&e.pos==null) { e.pos=p; e.out=false; } }
+      if(!isNaN(p)) for(const k in G){ if(!k.startsWith(x.date+"|La Zarzuela|")) continue; const e=G[k].ent.find(e=>e.name===n); if(e&&e.pos==null) { e.pos=p; e.out=false; } if(e&&x.j&&!e.jn) e.jn=x.j; }
       return; }
     const n=normName(name); if(seenHD.has(n+"|"+x.date)) return; seenHD.add(n+"|"+x.date); // un caballo no corre dos veces el mismo día
     const key=`${x.date}|${x.course}|${x.r||x.dist}`;
     const g=get(key,{date:x.date,course:x.course,dist:x.dist,cat:x.cat,g:x.g??(lz?GOING_BY_DATE[x.date]:null)??null,of:x.of});
     if(g.ent.some(e=>e.name===n)) return; const s=String(x.pos), p=parseInt(s,10);
-    g.ent.push({name:n,disp:name,pos:isNaN(p)||s.includes("+")?null:p,out:s.includes("+"),kg:x.kg}); };
+    g.ent.push({name:n,disp:name,pos:isNaN(p)||s.includes("+")?null:p,out:s.includes("+"),kg:x.kg,j:x.j}); };
   for(const e of (extra||[])) addRun(e.name,e);
   for(const r of (card||[])) for(const h of r.horses) for(const m of (h.runs||[])){ const date=isoOf(m.d); if(date) addRun(h.name,{...m,date,course:courseOf(m)}); }
   // el estado de la pista es del día y del hipódromo: si una carrera lo tiene, vale para las demás de esa jornada
@@ -218,7 +218,7 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
     { const hh=h.hist||[], gr=[...hh,...(h.runs||[]).filter(r=>!hh.some(x=>x.d===r.d))].filter(r=>r.g!=null);
       if(gr.length){ let s=0; for(const r of gr) s+=(posPts(r.pos)-.35)*(r.g/3); s/=gr.length;
         f.terreno=Math.max(.1,Math.min(.9,.5+s*3.2*(t/3)));
-        why.terreno=gr.map(r=>`${TERR_NAMES[r.g].toLowerCase()}: ${r.pos}º`).join(", ")+(t<.5?" (hoy pista buena: apenas cuenta)":""); }
+        why.terreno=gr.map(r=>`${(GOING[r.g]||"?")}: ${r.pos}º`).join(", ")+(t<.5?" (hoy pista buena: apenas cuenta)":""); }
       else { f.terreno=.5; why.terreno="sin carreras con terreno conocido"; } }
     if(race.rival){ const {bt,groups,asOf}=race.rival, me=normName(h.name);
       // los caballos sin resultados comparables cuentan como la media (geométrica) de los que sí tienen
