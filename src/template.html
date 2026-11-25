@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pronóstico La Zarzuela 29/11</title>
+<title>Pronóstico La Zarzuela</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -90,10 +90,10 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 @media(max-width:640px){table{font-size:13px}.stack thead{display:none}.stack tr.row{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 10px;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mut)}.stack td:empty{display:none}.stack .det{display:block}.stack .det td{padding-inline-start:12px;display:block}.stack .det td::before{display:none}.lname{font-size:13px}.fac{grid-template-columns:80px minmax(0,1fr) 36px}}
 </style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack tr.row td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head><body>
 <header class="band"><div class="wrap">
-<h1>La Zarzuela, domingo 29 de noviembre: pronóstico en directo</h1>
-<p>Modelo entrenado con las jornadas de otoño desde la 6ª (11 de octubre) y con el historial de cada caballo en España y Francia. El domingo, en cada carrera, indica el tiempo que hace, marca las bajas de última hora y escribe las cuotas: el pronóstico, las gemelas, los tríos y la apuesta de valor se recalculan al momento.</p>
+<h1 id="h1">La Zarzuela: pronóstico en directo</h1>
+<p>Modelo entrenado con las jornadas anteriores de la temporada en La Zarzuela y con las últimas carreras (3 meses) de cada caballo en cualquier hipódromo. El domingo, en cada carrera, indica el tiempo que hace, marca las bajas de última hora y escribe las cuotas: el pronóstico, las gemelas, los tríos y la apuesta de valor se recalculan al momento.</p>
 <div class="meta">
-<span>Primera carrera 11:30 · hierba</span><span>Previsión al 25/11: seco, 4–14 °C</span>
+<span id="meta1"></span><span id="prev"></span>
 <label class="sel" for="base">Pista al empezar la jornada
 <select id="base"><option value="bueno">Bueno</option><option value="bb">Bueno a blando</option><option value="blando">Blando</option><option value="pesado">Pesado</option></select></label>
 <button class="btn" id="resetAll" style="color:#fff;border-color:#6d8f7a">Borrar datos del día</button>
@@ -107,7 +107,7 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 </div></section>
 <section class="band" style="background:var(--card);border-top:1px solid var(--line)"><div class="wrap">
 <div class="prose"><h2 class="cond">Pesos entrenados jornada a jornada</h2>
-<p>Para cada jornada, desde la 7ª hasta la de este domingo, los pesos se han entrenado con todas las jornadas anteriores desde la 6ª (11/10) y se han probado en esa jornada sin haberla visto. Los pesos del 29/11 usan las 43 carreras del 11/10 al 22/11. El terreno no se entrena porque no hay parte oficial del estado de la pista de esas jornadas.</p></div>
+<p><span id="wfintro"></span> El terreno no se entrena porque no hay parte oficial del estado de la pista de esas jornadas.</p></div>
 <div id="wf"></div>
 <div class="prose" id="wfsum"></div>
 </div></section>
@@ -116,48 +116,47 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 <p>La versión anterior usaba la fórmula de Harville: la probabilidad de que <i>j</i> sea 2º si gana <i>i</i> se reparte en proporción a la fuerza de cada caballo. No es independencia, pero sí supone que el orden de los puestos sólo depende de la probabilidad de ganar, y por eso las gemelas favoritas salían casi siempre de los dos favoritos.</p>
 <p>Ahora cada carrera se simula 20.000 veces. Cada caballo tiene un nivel medio y una <b>regularidad</b> sacada de sus últimos puestos: un caballo de 3-2-2-1-2 corre casi siempre igual, y uno de 1-9-1-NP-8 a veces gana y a veces se hunde. Los niveles se ajustan para que las victorias simuladas coincidan con las probabilidades del modelo, y las gemelas y tríos salen de contar las llegadas simuladas. Así un caballo regular que rara vez gana puede aparecer en las mejores gemelas por delante de un favorito irregular.</p>
 <p id="cmpTxt"></p>
-<p class="note">Con 37 carreras de prueba, la simulación y Harville quedan prácticamente empatadas: la idea es más realista, pero todavía no está demostrado que acierte más. Ningún sistema garantiza un ROI positivo: apuesta sólo lo que puedas permitirte perder.</p>
+<p class="note">Con las carreras de prueba disponibles, la simulación y Harville quedan prácticamente empatadas: la idea es más realista, pero todavía no está demostrado que acierte más. Ningún sistema garantiza un ROI positivo: apuesta sólo lo que puedas permitirte perder.</p>
 <h2 class="cond" style="margin-top:28px">Lo que va de día</h2>
 <p>Al terminar cada carrera escribe la llegada (por ejemplo 9-11-6). Las carreras siguientes la usan de dos formas:</p>
 <ul><li><b>Siempre</b>: se suma a la estadística de la temporada de jinetes y preparadores (son datos nuevos, como una carrera más).</li>
 <li><b>Sólo si subes el deslizador «Efecto del día»</b>: el jinete o la cuadra que van por encima de lo esperado hoy suben hasta 0,15 puntos en su factor, y si los primeros están saliendo por dentro o por fuera se refuerza o se invierte la ventaja del cajón.</li></ul>
-<p>Lo he probado en las 37 carreras del 18/10 al 22/11, usando en cada carrera sólo lo que había pasado antes ese mismo día. Dar ventaja al jinete «en racha» empeoró la predicción (pérdida 2,341 frente a 2,311 sin efecto), igual que a la cuadra (2,345). Con el sesgo de cajón del día pasó lo contrario de lo esperado: los cajones que habían ido bien tendieron a ir peor después, casi seguro por casualidad. Por eso el efecto empieza a 0: la información se ve, pero no cambia las probabilidades salvo que tú lo decidas.</p>
+<p>Lo probé en las 37 carreras del 18/10 al 22/11, usando en cada carrera sólo lo que había pasado antes ese mismo día. Dar ventaja al jinete «en racha» empeoró la predicción (pérdida 2,341 frente a 2,311 sin efecto), igual que a la cuadra (2,345). Con el sesgo de cajón del día pasó lo contrario de lo esperado: los cajones que habían ido bien tendieron a ir peor después, casi seguro por casualidad. Por eso el efecto empieza a 0: la información se ve, pero no cambia las probabilidades salvo que tú lo decidas.</p>
 <h2 class="cond" style="margin-top:28px">Resto del modelo</h2>
 <ol>
-<li><b>Forma</b>: últimas cinco actuaciones del programa oficial; la más reciente pesa más.</li>
-<li><b>Distancia y clase</b>: carreras conocidas en La Zarzuela (desde el 11/10), San Sebastián y Francia, ponderadas por su distancia y su categoría. La clase es el factor con más señal en los datos.</li>
+<li><b>Forma</b>: últimas cinco carreras de los últimos 3 meses en cualquier hipódromo; la más reciente pesa más y el puesto se corrige por el nº de participantes. Con pocas carreras el factor se acerca al neutro.</li>
+<li><b>Distancia y clase</b>: las mismas carreras de los últimos 3 meses, ponderadas por su distancia y su categoría. La clase es el factor con más señal en los datos.</li>
 <li><b>Terreno</b>: puestos en pista blanda o muy blanda. Cuenta más cuanto más blanda esté la pista hoy.</li>
-<li><b>Jinete y preparador</b>: 43 carreras desde el 11/10, suavizadas hacia la media.</li>
+<li><b>Jinete y preparador</b>: <span id="nStat"></span>, suavizadas hacia la media.</li>
 <li><b>Peso y cajón</b>: kilos respecto a la media y ligera ventaja a la cuerda en 1.400–1.600 m.</li>
 <li><b>Tiempo en directo</b>: la lluvia ablanda la pista para esa carrera y las siguientes (llovizna +¼ de grado, lluvia +⅗, fuerte +1); el sol con más de 14 °C la seca un poco.</li>
 <li><b>Valor</b>: con cuotas, la probabilidad para apostar es mercado<sup>0,65</sup> × modelo<sup>0,35</sup>, corrigiendo el sesgo de las cuotas largas. Hay valor si probabilidad × cuota &gt; 1. El importe sugerido es ¼ de Kelly sobre tu banca.</li>
 </ol>
-<p class="small">Fuentes: participantes definitivos y llegadas de las jornadas del 11/10 al 29/11/2026 (hipodromodelazarzuela.es), programa Quíntuple Plus nº 70 (loteriasyapuestas.es), historiales en turf-fr.com, turfoo.fr y skysports.com. Datos recogidos el 25/11/2026.</p>
+<p class="small">Fuentes: participantes definitivos y llegadas oficiales (hipodromodelazarzuela.es), programa Quíntuple Plus (loteriasyapuestas.es) e historiales en zeturf.fr, equidia.fr, turf-fr.com y skysports.com. Los datos están en la carpeta <code>datos/</code> del repositorio; <span id="genInfo"></span></p>
 </div></section>
 </main>
 <script>
-/*DATA*/
-/*TRAIN*/
-/*WEIGHTS*/
+/*GEN*/
 /*MODEL*/
+const CARTA=GEN.CARTA, RACES=CARTA.carreras, VISITORS=CARTA.visitantes||{}, TRAIN=GEN.TRAIN, TRAINED=GEN.TRAINED, JOR=GEN.JORNADAS, RUNS_EXTRA=GEN.RUNS_EXTRA;
+setRefDate(CARTA.fecha);
 {
 const CLOTH=["#d7262e","#ffffff","#1f4fd1","#f3c623","#178a3c","#111111","#f07d14","#f08fb6","#1fb5b0","#6b2fa3","#8a8f94","#a8d42a"];
 const CTXT=["#fff","#111","#fff","#111","#fff","#f3c623","#111","#111","#111","#fff","#fff","#111"];
-const JOR=["11/10","18/10","25/10","01/11","08/11","15/11","22/11"];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pct=p=>(p*100).toFixed(1).replace(".",",")+" %";
 const dec=x=>x.toFixed(1).replace(".",",");
 const STATS=buildStats(TRAIN);
-// Carreras previas de cada caballo del domingo: las reconstruidas a mano (incluido el extranjero) + las de La Zarzuela desde el 11/10
-const RUNS_EXTRA=SEPT_RUNS.concat(EXTRA_RUNS);
-const RACESX=RACES.map(r=>({...r,date:REF_DATE,horses:r.horses.map(h=>{const man=h.runs||[]; const au=autoRuns(h.name,TRAIN,7,JOR).filter(a=>!man.some(m=>m.d===a.d));
-  const hist=buildHist(h,TRAIN,JOR,RUNS_EXTRA,WIN_FROM,5); let lastOld=h.lastOld;
-  if(!hist.length&&!lastOld){ const ds=man.map(m=>isoOf(m.d)).filter(Boolean).sort(); if(ds.length){ const x=ds.pop(); lastOld=x.slice(8,10)+"/"+x.slice(5,7); } }
-  const older=[...man,...au].filter(m=>{const i=isoOf(m.d); return !i||i<WIN_FROM;});
+// Carreras previas de cada caballo del domingo: las reconstruidas a mano (incluido el extranjero) + las de las jornadas cargadas
+const {REF_DATE:FECHA,WIN_FROM:DESDE}=getWin(), DDMM=FECHA.slice(8,10)+"/"+FECHA.slice(5,7), DESDE_DM=DESDE.slice(8,10)+"/"+DESDE.slice(5,7);
+const RACESX=RACES.map(r=>({...r,date:FECHA,horses:r.horses.map(h=>{const man=h.runs||[]; const au=autoRuns(h.name,TRAIN,JOR.length,JOR).filter(a=>!man.some(m=>m.d===a.d));
+  const hist=buildHist(h,TRAIN,JOR,RUNS_EXTRA,getWin().WIN_FROM,5); let lastOld=h.lastOld;
+  if(!hist.length&&!lastOld){ const ds=[...man,...au].map(m=>isoOf(m.d)).filter(Boolean).sort(); if(ds.length){ const x=ds.pop(); lastOld=x.slice(8,10)+"/"+x.slice(5,7); } }
+  const older=[...man,...au].filter(m=>{const i=isoOf(m.d); return !i||i<DESDE;});
   return {...h,hist,lastOld,older,runs:[...man,...au]};})}));
-const PRESETS=[{id:"final",label:"Entrenados para el 29/11",W:TRAINED.final.W,T:TRAINED.final.T},{id:"def",label:"Por defecto (sin entrenar)",W:DEF_W,T:DEF_T},
-  ...TRAINED.rows.filter(r=>r.d!=="29/11").map(r=>({id:r.d,label:`Entrenados para el ${r.d}`,W:r.W,T:r.T}))];
-const KEY="hz-29-11-2026-v4";
+const PRESETS=[{id:"final",label:`Entrenados para el ${DDMM}`,W:TRAINED.final.W,T:TRAINED.final.T},{id:"def",label:"Por defecto (sin entrenar)",W:DEF_W,T:DEF_T},
+  ...TRAINED.rows.filter(r=>r.d!==DDMM).map(r=>({id:r.d,label:`Entrenados para el ${r.d}`,W:r.W,T:r.T}))];
+const KEY="hz-"+FECHA+"-v5";
 let S={w:{...TRAINED.final.W},T:TRAINED.final.T,preset:"final",base:"bb",weather:{},scr:{},odds:{},res:{},dayW:0,cur:1,bank:100};
 try{const s=JSON.parse(localStorage.getItem(KEY)||"null"); if(s) S={...S,...s,w:{...S.w,...(s.w||{})}};}catch(e){}
 let open=new Set();
@@ -193,7 +192,7 @@ function race(){
       return `<span>${FNAMES[k]}</span><div class="fbar"><span style="left:${left}%;width:${wd}%;background:${col}"></span><span style="left:50%;width:2px;background:var(--mut)"></span></div><span class="small">${(x*100).toFixed(0)}</span><span class="why">${esc(o.why[k])}${S.w[k]?"":" · peso 0"}</span>`}).join("");
     const li=x=>`<li>${esc(x.d)}${x.course?" · "+esc(x.course):""}${(()=>{const t=(x.auto||/^La Zarzuela, \d/.test(x.txt||""))?"":(x.txt||"").replace(/ \((San Sebastián|Francia)[^)]*\)/,"").replace(/^San Sebastián( \(.*\))?$/,"").trim(); return t?" · "+esc(t):"";})()}${x.dist?" · "+x.dist.toLocaleString("es-ES")+" m":""}${x.cat&&x.cat!=="FR"?" · cat. "+esc(x.cat):""} · <b>${esc(x.pos)}º</b>${x.of?" de "+x.of:""}${x.g!=null?" · "+GOING[x.g]:""}${x.kg?" · "+String(x.kg).replace(".",",")+" kg":""}</li>`;
     const hl=(h.hist||[]).map(li).join(""), ol=(h.older||[]).map(li).join("");
-    const runs=`<p class="small" style="margin:10px 0 4px"><b>Últimas carreras en los últimos 3 meses (desde el 31/08, cualquier hipódromo) — son las que cuentan para forma y distancia</b></p>`+
+    const runs=`<p class="small" style="margin:10px 0 4px"><b>Últimas carreras en los últimos 3 meses (desde el ${DESDE_DM}, cualquier hipódromo) — son las que cuentan para forma y distancia</b></p>`+
       (hl?`<ul class="runs" style="margin-top:0">${hl}</ul>`:`<p class="small" style="margin:0">${h.lastOld?`Ninguna: no corre desde el ${esc(h.lastOld)}.`:h.form.length?`No encontradas con fecha; se usa la forma del programa (${esc(h.form.join("-"))}) con la mitad de peso.`:"Debutante."}</p>`)+
       (ol?`<p class="small" style="margin:10px 0 4px">Anteriores o sin fecha (solo para terreno y como referencia)</p><ul class="runs" style="margin-top:0">${ol}</ul>`:"");
     const evc=v.ev==null?"":`<span class="ev ${v.ev>0?"pos":"neg"}">${v.ev>0?"+":""}${(v.ev*100).toFixed(0)} %</span>`;
@@ -251,7 +250,7 @@ function wf(){
   const ks=FKEYS;
   document.getElementById("wf").innerHTML=`<div class="scroll"><table><thead><tr><th>Jornada</th><th class="n">Carreras de entreno</th>${ks.map(k=>`<th class="n">${FNAMES[k]}</th>`).join("")}<th class="n">Temp.</th><th class="n">Pérdida (entrenados)</th><th class="n">Pérdida (por defecto)</th><th class="n">Pérdida (azar)</th></tr></thead><tbody>${TRAINED.rows.map(r=>`<tr><td style="white-space:nowrap">${r.jornada}ª · ${r.d}</td><td class="n">${r.nTrain}</td>${ks.map(k=>`<td class="n">${r.W[k]}</td>`).join("")}<td class="n">${dec(r.T)}</td><td class="n">${r.test?r.test.ll.toFixed(3).replace(".",","):"—"}</td><td class="n">${r.testDef?r.testDef.ll.toFixed(3).replace(".",","):"—"}</td><td class="n">${r.test?r.test.llU.toFixed(3).replace(".",","):"—"}</td></tr>`).join("")}</tbody></table></div>`;
   const s=TRAINED.summary;
-  document.getElementById("wfsum").innerHTML=`<p>En las ${s.trained.n} carreras de prueba (18/10–22/11), los pesos entrenados dan una pérdida logarítmica media de <b>${s.trained.ll.toFixed(3).replace(".",",")}</b>, los de por defecto ${s.def.ll.toFixed(3).replace(".",",")} y elegir al azar ${s.trained.llU.toFixed(3).replace(".",",")} (menos es mejor). El favorito del modelo ganó el <b>${(s.trained.hit*100).toFixed(0)} %</b> de las veces y el ganador estuvo entre los 3 primeros del modelo el ${(s.trained.t3*100).toFixed(0)} %. Conclusión: el modelo apenas supera al azar y entrenar todavía no mejora a los pesos por defecto; lo que más se mueve es la <b>clase</b>, que gana peso jornada a jornada.</p>`;
+  document.getElementById("wfsum").innerHTML=`<p>En las ${s.trained.n} carreras de prueba (${TRAINED.rows.find(r=>r.test)?.d||""}–${JOR.at(-1)}), los pesos entrenados dan una pérdida logarítmica media de <b>${s.trained.ll.toFixed(3).replace(".",",")}</b>, los de por defecto ${s.def.ll.toFixed(3).replace(".",",")} y elegir al azar ${s.trained.llU.toFixed(3).replace(".",",")} (menos es mejor). El favorito del modelo ganó el <b>${(s.trained.hit*100).toFixed(0)} %</b> de las veces y el ganador estuvo entre los 3 primeros del modelo el ${(s.trained.t3*100).toFixed(0)} %. Conclusión: el modelo apenas supera al azar y entrenar todavía no mejora a los pesos por defecto; lo que más se mueve es la <b>clase</b>, que gana peso jornada a jornada.</p>`;
   const c=TRAINED.combo;
   document.getElementById("cmpTxt").innerHTML=`Prueba en ${c.n} carreras (pérdida logarítmica, menos es mejor): gemela real ${c.s2.toFixed(3).replace(".",",")} con la simulación frente a ${c.h2.toFixed(3).replace(".",",")} con Harville; trío real ${c.s3.toFixed(3).replace(".",",")} frente a ${c.h3.toFixed(3).replace(".",",")}.`;
 }
@@ -265,7 +264,7 @@ document.addEventListener("click",e=>{const t=e.target.closest(".tab"); if(t){S.
   if(e.target.id==="resetAll"){const ok=document.getElementById("resetAll"); if(ok.dataset.c){S.weather={};S.scr={};S.odds={};S.res={};delete ok.dataset.c;ok.textContent="Borrar datos del día";save();all();} else {ok.dataset.c=1;ok.textContent="Pulsa otra vez para confirmar";}}
 });
 document.addEventListener("keydown",e=>{const r=e.target.closest&&e.target.closest("tr.row"); if(r&&e.target===r&&(e.key==="Enter"||e.key===" ")){e.preventDefault(); r.click();}
-  const t=e.target.closest&&e.target.closest(".tab"); if(t&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){S.cur=((S.cur-1+(e.key==="ArrowRight"?1:5))%6)+1; open.clear(); save(); all(); document.getElementById("t"+S.cur).focus();}});
+  const t=e.target.closest&&e.target.closest(".tab"); if(t&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){{const NR=RACESX.length; S.cur=((S.cur-1+(e.key==="ArrowRight"?1:NR-1))%NR)+1;} open.clear(); save(); all(); document.getElementById("t"+S.cur).focus();}});
 let raf=0;
 document.addEventListener("input",e=>{const el=e.target;
   if(el.dataset&&el.dataset.k){S.w[el.dataset.k]=+el.value; S.preset="custom"; el.nextElementSibling.textContent=el.value; save(); const id=el.id;
@@ -283,6 +282,15 @@ document.addEventListener("change",e=>{const el=e.target, n=S.cur;
     save(); tabs(); race(); sum(); document.getElementById("llegada")?.focus(); return;}
   if(el.classList.contains("odd")){const o=S.odds[n]||{}, v=parseFloat(String(el.value).replace(",",".")); if(v>1) o[el.dataset.no]=v; else delete o[el.dataset.no]; S.odds[n]=o; save(); const id=el.id; race(); sum(); document.getElementById(id)?.focus();}
 });
+{ const dt=new Date(FECHA+"T12:00:00"), larga=dt.toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
+  document.getElementById("h1").textContent=`${CARTA.hipodromo||"La Zarzuela"}, ${larga}: pronóstico en directo`;
+  document.title=`Pronóstico La Zarzuela ${DDMM}`;
+  document.getElementById("meta1").textContent=`Primera carrera ${RACES[0].hora}${CARTA.pista?" · "+CARTA.pista:" · hierba"}`;
+  const pv=document.getElementById("prev"); if(CARTA.prevision) pv.textContent=CARTA.prevision; else pv.remove();
+  const nT=TRAIN.length, J1=JOR[0], JN=JOR.at(-1), j0=GEN.J0;
+  document.getElementById("wfintro").textContent=`Para cada jornada, desde la ${j0+1}ª hasta la de este domingo, los pesos se han entrenado con todas las jornadas anteriores desde la ${j0}ª (${J1}) y se han probado en esa jornada sin haberla visto. Los pesos del ${DDMM} usan las ${nT} carreras del ${J1} al ${JN}.`;
+  document.getElementById("nStat").textContent=`${nT} carreras desde el ${J1}`;
+  document.getElementById("genInfo").textContent=`${JOR.length} jornadas cargadas (${J1}–${JN}).`; }
 all(); wf();
 }
 </script>

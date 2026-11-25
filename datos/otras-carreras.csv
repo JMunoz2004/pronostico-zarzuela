@@ -1,0 +1,33 @@
+# Carreras de los participantes fuera de las jornadas de datos/jornadas (otros hipódromos o fechas). Separador ;
+# g = terreno: 0 bueno, 1 bueno a blando, 2 blando, 3 muy blando. Si se deja r vacío, la fila manda sobre lo que diga la jornada del mismo día.
+date;course;r;dist;cat;of;name;pos;g;kg;txt
+2026-09-20;La Zarzuela;1;1400;C;9;MELLO MELLO;2;;57.5;
+2026-09-20;La Zarzuela;3;2200;D;11;DANCELOT;1;;62;
+2026-09-20;La Zarzuela;4;2200;D;11;NAT IMPACT;1;;57.5;
+2026-09-20;La Zarzuela;4;2200;D;11;EOLO;3;;59.5;
+2026-09-24;La Zarzuela;1;1600;D;8;ZAMA;1;;55.5;
+2026-09-24;La Zarzuela;1;1600;D;8;ADHONOREM;2;;55.5;
+2026-09-27;La Zarzuela;1;1600;C;13;SKYRED;6;;57;
+2026-09-27;La Zarzuela;1;1600;C;13;DJIANGO;2;;55.5;
+2026-09-27;La Zarzuela;2;1500;D;14;DIAS FELICES;4;;59.5;
+2026-09-27;La Zarzuela;4;1500;D;12;AMAZONICO;1;;61.5;
+2026-09-27;La Zarzuela;4;1500;D;12;ANOTHER ROSE;12;;62.5;
+2026-09-27;La Zarzuela;4;1500;D;12;LADY COCODY;10;;60.5;
+2026-09-27;La Zarzuela;5;2800;A;8;LIGHT L'AUDRIELLE;5;;57;
+2026-09-27;La Zarzuela;6;2200;B;8;KINDLEO;8;;60;
+2026-09-27;La Zarzuela;6;2200;B;8;MASTER CATH;6;;60;
+2026-10-04;La Zarzuela;1;1500;C;6;REQUEJO LEGEND;1;;57;
+2026-10-04;La Zarzuela;1;1500;C;6;MELLO MELLO;3;;56.5;
+2026-10-04;La Zarzuela;1;1500;C;6;CHISTERA;4;;54;
+2026-09-02;San Sebastián;;1600;C;6;LADY COCODY;3;0;;
+2026-09-10;La Zarzuela;;1500;C;8;NEVER EVER;3;;;
+2026-09-10;La Zarzuela;;2400;C;9;LIGHT L'AUDRIELLE;5;;;
+2026-09-10;La Zarzuela (fibra);;1200;D;7;CUDILLERO;5;;;
+2026-09-30;San Sebastián;;1400;C;8;CUDILLERO;5;1;;
+2026-09-30;San Sebastián;;2200;C;7;SWEET WISH;1;1;;
+2026-10-02;Dax (Francia);;2300;FR;8;RONCAL;2;2;;GP de la Ville de Dax
+2026-10-18;La Zarzuela;;1600;;12;ANOTHER ROSE;6;;;
+2026-10-18;La Zarzuela;;;;18;ASAHI;11;;;
+2026-10-18;La Zarzuela;;;;18;NEVER EVER;9;;;
+2026-10-18;La Zarzuela;;;;14;BALOOK;7;;;
+2026-10-25;La Zarzuela;;;;7;REQUEJO LEGEND;7;;;

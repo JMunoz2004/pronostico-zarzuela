@@ -1,0 +1,27 @@
+# Cada vez que subes cambios en datos/ o src/, regenera index.html (entrenando los pesos) y lo sube al repositorio.
+# Streamlit Community Cloud detecta el commit y actualiza la app sola.
+name: Actualizar pronóstico
+on:
+  push:
+    branches: [main]
+    paths: ["datos/**", "src/**", "train.js", "build.py"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Entrenar y generar la página
+        run: node train.js && python3 build.py
+      - name: Subir index.html si ha cambiado
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898208+github-actions[bot]@users.noreply.github.com"
+          git add index.html src/generated.js
+          git diff --cached --quiet || (git commit -m "Regenerar pronóstico [automático]" && git push)

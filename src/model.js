@@ -47,9 +47,14 @@ function autoRuns(name, train, beforeIdx, J){
 }
 
 // ---------- Historial con fecha: últimas 5 carreras en los últimos 3 meses, en cualquier hipódromo ----------
-const REF_DATE="2026-11-29", WIN_FROM="2026-08-31", HIST_N=5;
+let REF_DATE="2026-11-29", WIN_FROM="2026-08-31"; const HIST_N=5, WIN_DAYS=90;
+// Fecha de la carta: las carreras cuentan si son de los WIN_DAYS días anteriores
+function setRefDate(iso){ REF_DATE=iso; WIN_FROM=new Date(Date.parse(iso)-WIN_DAYS*864e5).toISOString().slice(0,10); return WIN_FROM; }
+const getWin=()=>({REF_DATE,WIN_FROM});
 const GOING=["bueno","bueno a blando","blando","muy blando"];
-function isoOf(d){ const m=/^(\d\d)\/(\d\d)(?:\/(\d\d))?$/.exec(String(d||"")); return m?`${m[3]?"20"+m[3]:"2026"}-${m[2]}-${m[1]}`:null; }
+// "dd/mm" (sin año: el más reciente que no pase de la fecha de la carta) o "dd/mm/aa"
+function isoOf(d){ const m=/^(\d\d)\/(\d\d)(?:\/(\d\d))?$/.exec(String(d||"")); if(!m) return null;
+  if(m[3]) return `20${m[3]}-${m[2]}-${m[1]}`; let y=+REF_DATE.slice(0,4); if(`${y}-${m[2]}-${m[1]}`>REF_DATE) y--; return `${y}-${m[2]}-${m[1]}`; }
 const ddmm=iso=>iso.slice(8,10)+"/"+iso.slice(5,7);
 function courseOf(r){ if(r.course) return r.course; const t=r.txt||""; const m=/\(([^)]*Francia[^)]*)\)/.exec(t);
   if(r.cat==="FR"){ const c=/(Nantes|Dax|Pau|Le Mans|La Teste|Lyon-Parilly|Marseille-Borély|Toulouse|Tarbes)/.exec(t); return (c?c[1]:"Francia")+(c?" (Francia)":""); } if(/San Sebasti/i.test(t)) return "San Sebastián"; return "La Zarzuela"; }
@@ -88,7 +93,7 @@ function dayContext(races,results,scratched,beforeN){
 // Carreras de hoy ya corridas, en el formato de entrenamiento (para sumar a la estadística de la temporada)
 function todayAsTrain(races,results,scratched,beforeN){
   return races.filter(r=>r.n<beforeN && results[r.n]&&results[r.n].length).map(r=>{ const sc=new Set(scratched[r.n]||[]);
-    return {d:"29/11",r:r.n,dist:r.dist,cat:r.cat,am:false,arr:results[r.n],h:r.horses.filter(h=>!sc.has(h.no)).map(h=>({no:h.no,name:h.name,kg:h.kg,draw:h.draw,j:h.j,t:h.t,form:h.form}))}; });
+    return {d:REF_DATE.slice(8,10)+"/"+REF_DATE.slice(5,7),r:r.n,dist:r.dist,cat:r.cat,am:false,arr:results[r.n],h:r.horses.filter(h=>!sc.has(h.no)).map(h=>({no:h.no,name:h.name,kg:h.kg,draw:h.draw,j:h.j,t:h.t,form:h.form}))}; });
 }
 
 function features(race,stats,t,VIS,scratched,ctx,dayW){
@@ -250,4 +255,4 @@ function evalRaces(prepared,W,T){
     hit+=gt===0?1/eq:0; t3+=Math.max(0,Math.min(eq,3-gt))/eq; n++; }
   return {n,ll:ll/n,llU:llU/n,hit:hit/n,t3:t3/n};
 }
-if (typeof module!=="undefined") module.exports={buildHist,runPts,isoOf,REF_DATE,WIN_FROM,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};
+if (typeof module!=="undefined") module.exports={setRefDate,getWin,buildHist,runPts,isoOf,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};

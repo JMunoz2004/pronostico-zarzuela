@@ -1,5 +1,7 @@
-const D=require("../src/data.js"),M=require("../src/model.js"),TB=require("../src/train-built.js"),W=require("../src/weights.js"),TD=require("../src/train-data.js");
-const J=TD.JORNADAS, train=TB.TRAIN, rows=W.TRAINED.rows;
+// Prueba del "efecto del día". Uso: node analysis/intradia.js (después de node train.js)
+const {GEN}=require("../src/generated.js"), M=require("../src/model.js");
+const D={VISITORS:GEN.CARTA.visitantes||{}};
+const J=GEN.JORNADAS, train=GEN.TRAIN, rows=GEN.TRAINED.rows;
 const PTS=[1,.5,.3,.15,.08];
 // Construye, para cada carrera, las desviaciones "del día" de jinete, preparador y sesgo de cajón usando sólo carreras anteriores de esa jornada
 const items=[];

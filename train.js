@@ -1,8 +1,27 @@
-// Entrena los pesos jornada a jornada (walk-forward) y escribe src/weights.js
-// Uso: node train.js
-const fs=require("fs");
-const D=require("./src/data.js"), M=require("./src/model.js"), B=require("./src/backtest-data.js"), TD=require("./src/train-data.js");
-const J=TD.JORNADAS, train=TD.buildTrain(B.BT,D.STATS_RACES);
+// Lee los datos de datos/, entrena los pesos jornada a jornada (walk-forward) y escribe src/generated.js
+// Uso: node train.js   (después: python3 build.py)
+const fs=require("fs"), path=require("path");
+const M=require("./src/model.js");
+const CARTA=JSON.parse(fs.readFileSync("datos/carta.json","utf8"));
+M.setRefDate(CARTA.fecha);
+const FILES=fs.readdirSync("datos/jornadas").filter(f=>/^\d{4}-\d\d-\d\d\.txt$/.test(f)&&f.slice(0,10)<CARTA.fecha).sort();
+const parseJornada=txt=>{ const races=[]; let cur=null;
+  for(const raw of txt.split("\n")){ const line=raw.trim(); if(!line||line.startsWith("#")) continue;
+    if(line.startsWith("@")){ const [d,r,dist,cat,am,arr]=line.slice(1).split("|");
+      cur={d,r:+r,dist:+dist,cat,am:am==="am",arr:(arr||"").split(",").filter(Boolean).map(Number),h:[]}; races.push(cur); continue; }
+    const [no,name,kg,draw,j,t,form]=line.split("|");
+    cur.h.push({no:+no,name:name.trim(),kg:+kg,draw:+draw,j:j.trim(),t:t.trim(),form:form?form.split(",").map(x=>x.trim()).filter(Boolean):[]}); }
+  return races; };
+const train=FILES.flatMap(f=>parseJornada(fs.readFileSync(path.join("datos/jornadas",f),"utf8")));
+const J=FILES.map(f=>f.slice(8,10)+"/"+f.slice(5,7));
+for(const d of new Set(train.map(r=>r.d))) if(!J.includes(d)) throw new Error(`la fecha @${d} no coincide con el nombre de su archivo`);
+const J0=(CARTA.jornada||J.length+1)-J.length;  // nº de la primera jornada de entrenamiento
+const DREF=CARTA.fecha.slice(8,10)+"/"+CARTA.fecha.slice(5,7);
+const csv=fs.readFileSync("datos/otras-carreras.csv","utf8").split("\n").filter(l=>l.trim()&&!l.startsWith("#"));
+const cols=csv.shift().split(";").map(s=>s.trim());
+const RUNS_EXTRA=csv.map(l=>{ const v=l.split(";"), o={}; cols.forEach((c,i)=>{ const x=(v[i]??"").trim(); if(x==="") return;
+  o[c]=["r","dist","of","g","kg"].includes(c)?+x:c==="pos"&&/^\d+$/.test(x)?+x:x; }); return o; });
+const D={VISITORS:CARTA.visitantes||{}};
 
 // Comprobaciones de integridad
 for(const r of train){ const nos=r.h.map(h=>h.no);
@@ -13,17 +32,17 @@ console.log("carreras:",train.length,"caballos:",train.reduce((a,r)=>a+r.h.lengt
 
 const prep=M.prepareTrain(train,J,D.VISITORS);
 const rows=[];
-// Pesos para cada jornada desde la 7ª (18/10) hasta la 13ª (29/11), entrenados con las jornadas anteriores desde la 6ª (11/10)
+// Pesos para cada jornada desde la segunda hasta la de la carta, entrenados con todas las anteriores
 for(let i=1;i<=J.length;i++){
-  const d=i<J.length?J[i]:"29/11";
+  const d=i<J.length?J[i]:DREF;
   const fit=M.fitWeights(prep.filter(r=>r.idx<i));
-  const row={d,jornada:i+6,trainedOn:J.slice(0,i).join(", "),nTrain:prep.filter(r=>r.idx<i).length,W:fit.W,T:fit.T};
+  const row={d,jornada:i+J0,trainedOn:J.slice(0,i).join(", "),nTrain:prep.filter(r=>r.idx<i).length,W:fit.W,T:fit.T};
   if(i<J.length){ const test=prep.filter(r=>r.idx===i);
     row.test=M.evalRaces(test,fit.W,fit.T); row.testDef=M.evalRaces(test,M.DEF_W,M.DEF_T); }
   rows.push(row);
   console.log(d,JSON.stringify(fit), row.test?`test ll ${row.test.ll.toFixed(3)} def ${row.testDef.ll.toFixed(3)} unif ${row.test.llU.toFixed(3)} hit ${row.test.hit.toFixed(2)}/${row.testDef.hit.toFixed(2)}`:"");
 }
-// Resumen fuera de muestra (18/10 → 22/11)
+// Resumen fuera de muestra
 const agg=(k)=>{ let n=0,ll=0,llU=0,hit=0,t3=0; for(const r of rows.filter(r=>r[k])){ const t=r[k]; n+=t.n; ll+=t.ll*t.n; llU+=t.llU*t.n; hit+=t.hit*t.n; t3+=t.t3*t.n; } return {n,ll:ll/n,llU:llU/n,hit:hit/n,t3:t3/n}; };
 const summary={trained:agg("test"),def:agg("testDef")};
 console.log("RESUMEN",JSON.stringify(summary));
@@ -45,12 +64,9 @@ for(const k of ["h2","s2","h3","s3"]) g[k]/=g.n;
 console.log("GEMELAS/TRIOS (log-pérdida media, menos es mejor):",JSON.stringify(g));
 
 const final=rows[rows.length-1];
-fs.writeFileSync("src/weights.js",`// Generado por train.js — pesos entrenados jornada a jornada (walk-forward) con el otoño 2026 desde la 6ª jornada.
-const TRAINED = ${JSON.stringify({rows,summary,combo:g,final:{W:final.W,T:final.T}},null,1)};
-if (typeof module!=="undefined") module.exports={TRAINED};
+const out={CARTA,TRAIN:train,JORNADAS:J,J0,RUNS_EXTRA,TRAINED:{rows,summary,combo:g,final:{W:final.W,T:final.T}}};
+fs.writeFileSync("src/generated.js",`// Generado por train.js a partir de datos/ — no editar a mano.
+const GEN = ${JSON.stringify(out)};
+if (typeof module!=="undefined") module.exports={GEN};
 `);
-// Carreras de entrenamiento en formato compacto para la web (estadística y carreras previas)
-fs.writeFileSync("src/train-built.js",`// Generado por train.js
-const TRAIN = ${JSON.stringify(train)};
-if (typeof module!=="undefined") module.exports={TRAIN};
-`);
+console.log("src/generated.js escrito:",FILES.length,"jornadas,",train.length,"carreras; carta del",CARTA.fecha);
