@@ -109,7 +109,10 @@ function meetingGroups(train, extra, card){
     g.ent.push({name:n,disp:name,pos:isNaN(p)||s.includes("+")?null:p,out:s.includes("+"),kg:x.kg}); };
   for(const e of (extra||[])) addRun(e.name,e);
   for(const r of (card||[])) for(const h of r.horses) for(const m of (h.runs||[])){ const date=isoOf(m.d); if(date) addRun(h.name,{...m,date,course:courseOf(m)}); }
-  return Object.values(G).filter(g=>g.ent.length>1).sort((a,b)=>a.date<b.date?-1:1);
+  // el estado de la pista es del día y del hipódromo: si una carrera lo tiene, vale para las demás de esa jornada
+  const dayG={}; for(const g of Object.values(G)) if(g.g!=null) dayG[g.date+"|"+g.course]=g.g;
+  for(const g of Object.values(G)) if(g.g==null&&dayG[g.date+"|"+g.course]!=null) g.g=dayG[g.date+"|"+g.course];
+  return Object.values(G).sort((a,b)=>a.date<b.date?-1:1);
 }
 // true si a llegó por delante de b, false si detrás, null si no se sabe (los dos fuera de los 5 primeros)
 function ahead(a,b){ if(a.pos!=null&&b.pos!=null) return a.pos<b.pos; if(a.pos!=null&&a.pos<=5&&b.out) return true; if(b.pos!=null&&b.pos<=5&&a.out) return false; return null; }
