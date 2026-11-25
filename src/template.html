@@ -69,7 +69,7 @@ tr.row{cursor:pointer}tr.row:hover{background:var(--soft)}
 .fac{display:grid;grid-template-columns:96px minmax(0,1fr) 40px;gap:6px 10px;align-items:center;font-size:14px}
 .fbar{height:10px;border-radius:5px;background:var(--line);position:relative;overflow:hidden}.fbar span{position:absolute;top:0;bottom:0}
 .why{grid-column:2/4;color:var(--mut);font-size:13px;margin-top:-4px}
-.runs{margin:10px 0 0;padding-left:18px;font-size:14px}.runs .cloth{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:22px;height:20px;font-size:12px;margin:0 2px}
+.runs{margin:10px 0 0;padding-left:18px;font-size:14px}.runs .cloth,.dh .cloth{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;width:22px;height:20px;font-size:12px;margin:0 2px}
 .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
 .box h3{margin:0 0 6px;font-size:22px}
 .sl{display:grid;grid-template-columns:90px minmax(0,1fr) 30px;gap:8px;align-items:center;margin:4px 0}
@@ -81,6 +81,7 @@ input[type=range]{width:100%;min-height:40px;accent-color:var(--turf)}
 .bet h3{margin:0 0 4px;font-size:21px}.bet .k{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
 .bet ol{margin:6px 0 0;padding-left:20px}.bet li{margin:4px 0}
 .big{font:700 26px "Barlow Condensed"}
+.dh h3{font:600 22px "Barlow Condensed";margin:18px 0 8px}.dh tbody.g tr:first-child td{border-top:2px solid var(--line)}.dh td.hn2{white-space:nowrap}.dh .tot{color:var(--mut);font-size:13px}
 .sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
 .scard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
 .scard h3{margin:0;font-size:20px}.pick{display:flex;gap:10px;align-items:center;margin-top:8px}
@@ -104,6 +105,17 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 <section class="band" style="padding-top:0"><div class="wrap">
 <h2 class="cond" style="font-size:32px;margin:0 0 12px">Resumen de la jornada</h2>
 <div class="sum" id="sum"></div>
+</div></section>
+<section class="band" style="padding-top:0"><div class="wrap">
+<h2 class="cond" style="font-size:32px;margin:0 0 6px">Carreras anteriores por distancia</h2>
+<p class="small" style="margin:0 0 12px">Elige un rango de distancias y verás quién ha corrido en él, cómo quedó y con cuántos kilos; y lo mismo para los jinetes que montan hoy.</p>
+<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+<label class="sel" for="dMin">Desde <input type="number" id="dMin" step="100" min="800" max="5000" style="width:110px"> m</label>
+<label class="sel" for="dMax">hasta <input type="number" id="dMax" step="100" min="800" max="5000" style="width:110px"> m</label>
+<label class="sel" for="dScope">De <select id="dScope"><option value="race">la carrera seleccionada</option><option value="all">todas las carreras del día</option></select></label>
+<button class="btn" id="dReset">Distancia de la carrera ±200 m</button>
+</div>
+<div id="dHist"></div>
 </div></section>
 <section class="band" style="background:var(--card);border-top:1px solid var(--line)"><div class="wrap">
 <div class="prose"><h2 class="cond">Pesos entrenados jornada a jornada</h2>
@@ -156,6 +168,38 @@ const RACESX=RACES.map(r=>({...r,date:FECHA,rival:rivalCtx(GROUPS,r,FECHA),horse
   if(!hist.length&&!lastOld){ const ds=[...man,...au].map(m=>isoOf(m.d)).filter(Boolean).sort(); if(ds.length){ const x=ds.pop(); lastOld=x.slice(8,10)+"/"+x.slice(5,7); } }
   const older=[...man,...au].filter(m=>{const i=isoOf(m.d); return !i||i<DESDE;});
   return {...h,hist,lastOld,older,runs:[...man,...au]};})}));
+// ---------- Carreras anteriores por distancia ----------
+// Todas las actuaciones conocidas de cada caballo (jornadas, otros hipódromos, historial manual) y todas las montas de cada jinete en las jornadas.
+const RUNS_BY_H={}, RIDES_BY_J={};
+for(const g of GROUPS) for(const e of g.ent) (RUNS_BY_H[e.name]=RUNS_BY_H[e.name]||[]).push({date:g.date,course:g.course,dist:g.dist,g:g.g,of:g.of||g.ent.length,pos:e.pos,out:e.out,kg:e.kg,j:e.j});
+for(const r of RACES) for(const h of r.horses){ const k=normName(h.name), L=RUNS_BY_H[k]=RUNS_BY_H[k]||[];
+  for(const m of (h.runs||[])) if(!isoOf(m.d)&&m.dist) L.push({date:null,dlabel:String(m.d),course:courseOf(m),dist:m.dist,g:m.g??null,of:m.of,pos:typeof m.pos==="number"?m.pos:parseInt(m.pos,10)||null,out:false,kg:m.kg}); }
+const JN={}; for(const r of RACES) for(const h of r.horses) JN[h.j]=h.jn.replace(/\s*\(.*\)$/,"");
+for(const r of TRAIN){ const date=isoOf(r.d); for(const h of r.h){ const i=r.arr.indexOf(h.no);
+  (RIDES_BY_J[h.j]=RIDES_BY_J[h.j]||[]).push({date,dist:r.dist,cat:r.cat,r:r.r,horse:h.name,pos:i>=0?i+1:null,out:i<0,of:r.h.length,kg:h.kg,g:(GEN.GOING||{})[date]??null,t:h.t}); } }
+const fdate=x=>x.date?x.date.slice(8,10)+"/"+x.date.slice(5,7)+"/"+x.date.slice(2,4):esc(x.dlabel||"?");
+const fpos=x=>x.pos!=null?`<b>${x.pos}º</b>${x.of?" de "+x.of:""}`:x.out?`6º o peor${x.of?" de "+x.of:""}`:"?";
+const fkg=k=>k?String(k).replace(".",",")+" kg":"—";
+function dRange(){ const r=RACESX.find(x=>x.n===S.cur); if(!S.dr||S.dr.auto) return {min:Math.max(800,r.dist-200),max:r.dist+200,scope:S.dr?.scope||"race",auto:true}; return S.dr; }
+function dhist(){ const D=dRange(), lo=Math.min(D.min,D.max), hi=Math.max(D.min,D.max), inR=x=>x.dist>=lo&&x.dist<=hi;
+  document.getElementById("dMin").value=D.min; document.getElementById("dMax").value=D.max; document.getElementById("dScope").value=D.scope;
+  const races=D.scope==="all"?RACESX:RACESX.filter(x=>x.n===S.cur);
+  const sortD=(a,b)=>(b.date||"")<(a.date||"")?-1:1, sm=L=>{const w=L.filter(x=>x.pos===1).length, p=L.filter(x=>x.pos!=null&&x.pos<=3).length; return `${L.length} carrera${L.length!==1?"s":""} · ${w} victoria${w!==1?"s":""} · ${p} en podio`;};
+  let hb="", nH=0, jb="", nJ=0; const jSeen=new Map();
+  for(const r of races){ const sc=scrSet(r.n);
+    for(const h of r.horses){ if(sc.has(h.no)) continue; const L=(RUNS_BY_H[normName(h.name)]||[]).filter(inR).sort(sortD);
+      if(!jSeen.has(h.j)) jSeen.set(h.j,[]); jSeen.get(h.j).push({r,h});
+      if(!L.length) continue; nH++;
+      hb+=`<tbody class="g">`+L.map((x,i)=>`<tr>${i===0?`<td rowspan="${L.length}" class="hn2">${cloth(h.no)} <span class="hn">${esc(h.name)}</span>${D.scope==="all"?`<br><span class="small">${r.n}ª carrera</span>`:""}<br><span class="tot">${sm(L)}</span></td>`:""}<td class="n">${fdate(x)}</td><td>${esc(x.course||"")}</td><td class="n">${x.dist.toLocaleString("es-ES")} m</td><td>${x.g!=null?GOING[x.g]:"—"}</td><td class="n">${fpos(x)}</td><td class="n">${fkg(x.kg)}</td><td>${x.j?esc(JN[x.j]||tname(x.j)):"—"}</td></tr>`).join("")+`</tbody>`; } }
+  for(const [j,mounts] of jSeen){ if(j==="AMATEUR") continue; const L=(RIDES_BY_J[j]||[]).filter(inR).sort(sortD); if(!L.length) continue; nJ++;
+    const hoy=mounts.map(m=>`${cloth(m.h.no)} ${esc(m.h.name.replace(/ \(.*\)/,""))}${D.scope==="all"?` (${m.r.n}ª)`:""}`).join(", ");
+    jb+=`<tbody class="g">`+L.map((x,i)=>`<tr>${i===0?`<td rowspan="${L.length}" class="hn2"><span class="hn">${esc(JN[j]||tname(j))}</span><br><span class="small">hoy: ${hoy}</span><br><span class="tot">${sm(L)}</span></td>`:""}<td class="n">${fdate(x)}</td><td class="n">${x.r}ª · ${x.dist.toLocaleString("es-ES")} m</td><td>${esc(x.horse)}</td><td class="n">${fpos(x)}</td><td class="n">${fkg(x.kg)}</td><td>${x.g!=null?GOING[x.g]:"—"}</td><td>${esc(tname(x.t))}</td></tr>`).join("")+`</tbody>`; }
+  const rng=`${lo.toLocaleString("es-ES")}–${hi.toLocaleString("es-ES")} m`;
+  document.getElementById("dHist").innerHTML=`<div class="dh">
+<h3>Caballos (${nH} con carreras entre ${rng})</h3>${nH?`<div class="scroll"><table><thead><tr><th>Caballo</th><th class="n">Fecha</th><th>Hipódromo</th><th class="n">Distancia</th><th>Terreno</th><th class="n">Puesto</th><th class="n">Peso</th><th>Jinete</th></tr></thead>${hb}</table></div>`:`<p class="small">Ningún caballo tiene carreras conocidas en ese rango.</p>`}
+<h3>Jinetes (${nJ} con montas entre ${rng})</h3>${nJ?`<div class="scroll"><table><thead><tr><th>Jinete</th><th class="n">Fecha</th><th class="n">Carrera</th><th>Caballo</th><th class="n">Puesto</th><th class="n">Peso</th><th>Terreno</th><th>Preparador</th></tr></thead>${jb}</table></div>`:`<p class="small">Ningún jinete tiene montas en ese rango en las jornadas cargadas.</p>`}
+<p class="small">Caballos: todas las carreras conocidas (jornadas de La Zarzuela desde el ${JOR[0]}, San Sebastián, Francia y el historial reconstruido a mano). Jinetes: montas en las jornadas de La Zarzuela cargadas (${JOR[0]}–${JOR.at(-1)}); de fuera no tenemos el jinete. «6º o peor»: la llegada oficial solo da los 5 primeros. Terreno «—»: no se conoce (ver <code>datos/terreno.csv</code>).</p></div>`;
+}
 const PRESETS=[{id:"final",label:`Entrenados para el ${DDMM}`,W:TRAINED.final.W,T:TRAINED.final.T},{id:"def",label:"Por defecto (sin entrenar)",W:DEF_W,T:DEF_T},
   ...TRAINED.rows.filter(r=>r.d!==DDMM).map(r=>({id:r.d,label:`Entrenados para el ${r.d}`,W:r.W,T:r.T}))];
 const KEY="hz-"+FECHA+"-v5";
@@ -261,9 +305,9 @@ function wf(){
   const c=TRAINED.combo;
   document.getElementById("cmpTxt").innerHTML=`Prueba en ${c.n} carreras (pérdida logarítmica, menos es mejor): gemela real ${c.s2.toFixed(3).replace(".",",")} con la simulación frente a ${c.h2.toFixed(3).replace(".",",")} con Harville; trío real ${c.s3.toFixed(3).replace(".",",")} frente a ${c.h3.toFixed(3).replace(".",",")}.`;
 }
-function all(){tabs();race();sum();}
+function all(){tabs();race();sum();dhist();}
 document.getElementById("base").value=S.base;
-document.addEventListener("click",e=>{const t=e.target.closest(".tab"); if(t){S.cur=+t.dataset.n; open.clear(); save(); all(); return;}
+document.addEventListener("click",e=>{ if(e.target.id==="dReset"){ S.dr={...dRange(),auto:true}; save(); dhist(); return; } const t=e.target.closest(".tab"); if(t){S.cur=+t.dataset.n; open.clear(); save(); all(); return;}
   const s=e.target.closest("[data-scr]"); if(s){const n=S.cur, no=+s.dataset.scr, set=scrSet(n); set.has(no)?set.delete(no):set.add(no); S.scr[n]=[...set]; save(); tabs(); race(); sum(); document.querySelector(`[data-scr="${no}"]`)?.focus(); return;}
   if(e.target.closest("input,select")) return;
   const r=e.target.closest("tr.row"); if(r){const n=+r.dataset.no; open.has(n)?open.delete(n):open.add(n); race(); document.querySelector(`tr.row[data-no="${n}"]`)?.focus(); return;}
@@ -274,11 +318,13 @@ document.addEventListener("keydown",e=>{const r=e.target.closest&&e.target.close
   const t=e.target.closest&&e.target.closest(".tab"); if(t&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){{const NR=RACESX.length; S.cur=((S.cur-1+(e.key==="ArrowRight"?1:NR-1))%NR)+1;} open.clear(); save(); all(); document.getElementById("t"+S.cur).focus();}});
 let raf=0;
 document.addEventListener("input",e=>{const el=e.target;
+  if(el.id==="dMin"||el.id==="dMax"){ const v=parseInt(el.value,10); if(!(v>=400&&v<=6000)) return; const D=dRange(); S.dr={...D,auto:false,[el.id==="dMin"?"min":"max"]:v}; save(); clearTimeout(window.__dt); window.__dt=setTimeout(dhist,250); return; }
   if(el.dataset&&el.dataset.k){S.w[el.dataset.k]=+el.value; S.preset="custom"; el.nextElementSibling.textContent=el.value; save(); const id=el.id;
     cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{race(); sum(); document.getElementById(id)?.focus();}); return;}
   if(el.id==="bank"){const v=parseFloat(el.value); if(v>0){S.bank=v; save();} return;}
   if(el.id==="dayW"){S.dayW=+el.value/100; el.nextElementSibling.textContent=el.value; save(); cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{race(); sum(); document.getElementById("dayW")?.focus();}); return;}});
 document.addEventListener("change",e=>{const el=e.target, n=S.cur;
+  if(el.id==="dScope"){ S.dr={...dRange(),scope:el.value}; save(); dhist(); return; }
   if(el.id==="base"){S.base=el.value; save(); all(); return;}
   if(el.id==="preset"){const p=PRESETS.find(x=>x.id===el.value); if(p){S.w={...p.W}; S.T=p.T;} S.preset=el.value; save(); race(); sum(); document.getElementById("preset")?.focus(); return;}
   if(el.id==="cielo"||el.id==="temp"){const w=S.weather[n]||{}; if(el.id==="cielo") w.cielo=el.value; else w.temp=el.value===""?"":+el.value; S.weather[n]=w; save(); race(); sum(); document.getElementById(el.id)?.focus(); return;}

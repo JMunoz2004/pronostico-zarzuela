@@ -87,12 +87,14 @@ const daysTo=iso=>(Date.parse(REF_DATE)-Date.parse(iso))/864e5;
 function meetingGroups(train, extra, card){
   const G={}, trainDates=new Set(train.map(r=>isoOf(r.d)));
   const get=(key,base)=>G[key]||(G[key]={...base,key,ent:[]});
+  const seenHD=new Set();
   for(const r of train){ const date=isoOf(r.d), gg=GOING_BY_DATE[date];
     const g=get(`${date}|La Zarzuela|${r.r}`,{date,course:"La Zarzuela",dist:r.dist,cat:r.cat,g:gg??null,of:r.h.length});
     for(const h of r.h){ const i=r.arr.indexOf(h.no); g.ent.push({name:normName(h.name),disp:h.name,pos:i>=0?i+1:null,out:i<0,kg:h.kg,draw:h.draw,j:h.j}); } }
   const addRun=(name,x)=>{ if(!x.date||/^(NP|TBE)$/i.test(String(x.pos))) return; const lz=/Zarzuela/.test(x.course||"");
     if(lz&&trainDates.has(x.date)) return; // esa jornada ya está entera en los datos
-    const key=`${x.date}|${x.course}|${x.r||x.dist}`, n=normName(name);
+    const n=normName(name); if(seenHD.has(n+"|"+x.date)) return; seenHD.add(n+"|"+x.date); // un caballo no corre dos veces el mismo día
+    const key=`${x.date}|${x.course}|${x.r||x.dist}`;
     const g=get(key,{date:x.date,course:x.course,dist:x.dist,cat:x.cat,g:x.g??(lz?GOING_BY_DATE[x.date]:null)??null,of:x.of});
     if(g.ent.some(e=>e.name===n)) return; const s=String(x.pos), p=parseInt(s,10);
     g.ent.push({name:n,disp:name,pos:isNaN(p)||s.includes("+")?null:p,out:s.includes("+"),kg:x.kg}); };
