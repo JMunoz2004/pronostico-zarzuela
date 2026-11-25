@@ -11,6 +11,7 @@ App de Streamlit (y página autocontenida `index.html`) que pronostica las carre
   - Cada carrera pesa más cuanto más reciente es (vida media ≈ 4 semanas).
   - El puesto se corrige por el nº de participantes.
   - Con pocas carreras, el factor se acerca al neutro.
+- **Clase:** nivel de categoría de cada caballo con todas sus carreras conocidas (Listed, A, B, C, D, corregido por el puesto), comparado con el resto del lote: quien corre en categorías mejores sale por encima.
 - **Rivales directos y cruzados:** con todas las carreras conocidas se ajusta un modelo de Bradley-Terry («quién llega por delante de quién»), ponderando lo reciente, la distancia y los kilos. La ficha de cada caballo lista sus enfrentamientos directos con los rivales de ese día.
 - **Carreras anteriores por distancia:** eliges un rango (por defecto la distancia de la carrera ±200 m) y salen todas las carreras conocidas de los caballos en ese rango (fecha, hipódromo, terreno, puesto, kilos y jinete) y todas las montas de los jinetes de ese día (caballo, puesto, kilos, preparador), con su resumen de victorias y podios. Se puede ver para la carrera seleccionada o para todo el día.
 - **Estado de la pista** de cada jornada en `datos/terreno.csv` (se usa en el factor terreno y, con 3 o más jornadas conocidas, se entrena su peso).

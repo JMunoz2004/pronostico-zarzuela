@@ -121,7 +121,6 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 <div class="prose"><h2 class="cond">Pesos entrenados jornada a jornada</h2>
 <p><span id="wfintro"></span> El terreno no se entrena porque no hay parte oficial del estado de la pista de esas jornadas.</p></div>
 <div id="wf"></div>
-<div class="prose" id="wfsum"></div>
 </div></section>
 <section class="band"><div class="wrap prose">
 <h2 class="cond">Cómo se calculan las gemelas y los tríos</h2>
@@ -137,7 +136,8 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 <h2 class="cond" style="margin-top:28px">Resto del modelo</h2>
 <ol>
 <li><b>Forma</b>: últimas cinco carreras de los últimos 3 meses en cualquier hipódromo; la más reciente pesa más y el puesto se corrige por el nº de participantes. Con pocas carreras el factor se acerca al neutro.</li>
-<li><b>Distancia y clase</b>: las mismas carreras de los últimos 3 meses, ponderadas por su distancia y su categoría. La clase es el factor con más señal en los datos.</li>
+<li><b>Distancia</b>: las mismas carreras de los últimos 3 meses, ponderadas por lo parecida que sea su distancia a la de hoy.</li>
+<li><b>Clase</b>: un caballo que corre en categorías mejores suele ser superior. Cada carrera conocida (hasta ~1 año, más las recientes) vale su categoría (D=1, C=2, B=3, A=4, Listed local 5, Listed internacional 6), algo más si quedó delante y algo menos si quedó atrás. Se mezcla su mejor nivel con la media y se compara con la media del lote de hoy: quien viene de correr en A contra caballos de C sale con ventaja.</li>
 <li><b>Terreno</b>: puestos en pista blanda o muy blanda. Cuenta más cuanto más blanda esté la pista hoy. El estado de la pista de cada jornada se apunta en <code>datos/terreno.csv</code>; de las jornadas pasadas de La Zarzuela no hay parte oficial publicado, así que de momento solo cuentan las carreras de fuera con terreno conocido.</li>
 <li><b>Rivales</b>: con todas las carreras conocidas se ajusta un modelo de Bradley-Terry de «quién llega por delante de quién». Cuentan los enfrentamientos directos con los de hoy y los cruzados (A ganó a C y C ganó a B), con más peso si la carrera es reciente, a distancia parecida y teniendo en cuenta los kilos. En la ficha de cada caballo salen los enfrentamientos directos con fecha, distancia, terreno, puestos y kilos.</li>
 <li><b>Jinete y preparador</b>: <span id="nStat"></span>, suavizadas hacia la media.</li>
@@ -301,7 +301,6 @@ function wf(){
   const ks=FKEYS;
   document.getElementById("wf").innerHTML=`<div class="scroll"><table><thead><tr><th>Jornada</th><th class="n">Carreras de entreno</th>${ks.map(k=>`<th class="n">${FNAMES[k]}</th>`).join("")}<th class="n">Temp.</th><th class="n">Pérdida (entrenados)</th><th class="n">Pérdida (por defecto)</th><th class="n">Pérdida (azar)</th></tr></thead><tbody>${TRAINED.rows.map(r=>`<tr><td style="white-space:nowrap">${r.jornada}ª · ${r.d}</td><td class="n">${r.nTrain}</td>${ks.map(k=>`<td class="n">${r.W[k]}</td>`).join("")}<td class="n">${dec(r.T)}</td><td class="n">${r.test?r.test.ll.toFixed(3).replace(".",","):"—"}</td><td class="n">${r.testDef?r.testDef.ll.toFixed(3).replace(".",","):"—"}</td><td class="n">${r.test?r.test.llU.toFixed(3).replace(".",","):"—"}</td></tr>`).join("")}</tbody></table></div>`;
   const s=TRAINED.summary;
-  document.getElementById("wfsum").innerHTML=`<p>En las ${s.trained.n} carreras de prueba (${TRAINED.rows.find(r=>r.test)?.d||""}–${JOR.at(-1)}), los pesos entrenados dan una pérdida logarítmica media de <b>${s.trained.ll.toFixed(3).replace(".",",")}</b>, los de por defecto ${s.def.ll.toFixed(3).replace(".",",")} y elegir al azar ${s.trained.llU.toFixed(3).replace(".",",")} (menos es mejor). El favorito del modelo ganó el <b>${(s.trained.hit*100).toFixed(0)} %</b> de las veces y el ganador estuvo entre los 3 primeros del modelo el ${(s.trained.t3*100).toFixed(0)} %. Conclusión: el modelo apenas supera al azar y entrenar todavía no mejora a los pesos por defecto; lo que más se mueve es la <b>clase</b>, que gana peso jornada a jornada.</p>`;
   const c=TRAINED.combo;
   document.getElementById("cmpTxt").innerHTML=`Prueba en ${c.n} carreras (pérdida logarítmica, menos es mejor): gemela real ${c.s2.toFixed(3).replace(".",",")} con la simulación frente a ${c.h2.toFixed(3).replace(".",",")} con Harville; trío real ${c.s3.toFixed(3).replace(".",",")} frente a ${c.h3.toFixed(3).replace(".",",")}.`;
 }

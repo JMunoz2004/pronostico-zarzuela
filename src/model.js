@@ -157,6 +157,21 @@ function todayAsTrain(races,results,scratched,beforeN){
     return {d:REF_DATE.slice(8,10)+"/"+REF_DATE.slice(5,7),r:r.n,dist:r.dist,cat:r.cat,am:false,arr:results[r.n],h:r.horses.filter(h=>!sc.has(h.no)).map(h=>({no:h.no,name:h.name,kg:h.kg,draw:h.draw,j:h.j,t:h.t,form:h.form}))}; });
 }
 
+// Nivel de categoría de un caballo: cada carrera vale su categoría (D=1 … A=4, Listed local 5, Listed internacional 6)
+// corregida por cómo quedó (ganar vale ~½ escalón más; quedar atrás, ~1 escalón menos). Cuentan todas las carreras con
+// categoría conocida, más las recientes, y se mezcla la mejor con la media: un caballo que se ha medido bien en categorías
+// altas suele ser superior a uno que solo ha corrido en las bajas.
+const CLS={perf:1,best:.5,k:.18}; // peso del puesto dentro de la categoría, mezcla mejor/media, escala del factor
+function classLevel(h){
+  const seen=new Set(), L=[];
+  for(const r of [...(h.hist||[]),...(h.runs||[])]){ if(!r.cat||CAT[r.cat]==null||seen.has(r.d)) continue; if(/^(NP|TBE)$/i.test(String(r.pos))) continue; seen.add(r.d);
+    const iso=isoOf(r.d), days=iso?daysTo(iso):null; if(days!=null&&days<0) continue;
+    const w=days==null?.35:Math.exp(-days/180); if(w<.05) continue;
+    const perf=runPts(r), v=CAT[r.cat]+CLS.perf*(perf-.45); L.push({v,w,cat:r.cat,perf}); }
+  if(!L.length) return null;
+  const W=L.reduce((a,x)=>a+x.w,0), avg=L.reduce((a,x)=>a+x.w*x.v,0)/W, best=Math.max(...L.filter(x=>x.w>=.3).map(x=>x.v),avg);
+  return {lvl:CLS.best*best+(1-CLS.best)*avg,n:W,L}; }
+const lvlName=v=>v>=5.5?"Listed int.":v>=4.5?"Listed local":v>=3.5?"A":v>=2.5?"B":v>=1.5?"C":"D";
 function features(race,stats,t,VIS,scratched,ctx,dayW){
   const sc=scratched||new Set();
   const H=race.horses.filter(h=>!sc.has(h.no)), N=race.horses.length;
@@ -164,7 +179,7 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
   const pesoM=1+.16*t, cajonM=1-.1*t, fondoM=1+.13*t;
   const dStr=race.dist<=1400?.6:race.dist<=1600?.45:race.dist<=2000?.25:.05;
   const anyForm=H.some(x=>x.form.length);
-  return H.map(h=>{
+  const out=H.map(h=>{
     const f={}, why={};
     if(h.hist && h.hist.length){ let s=0,ws_=0; for(const r of h.hist){ const w=Math.exp(-daysTo(r.date)/40); s+=w*runPts(r); ws_+=w; }
       const n=h.hist.length, v=Math.min(1,.08+s/ws_*1.1); f.forma=.38+(v-.38)*n/(n+1);
@@ -195,9 +210,8 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
     { const rel=N>1?1-(h.draw-1)/(N-1):.5; let bias=0;
       if(ctx&&ctx.biasN&&race.dist<=2000) bias=(dayW||0)*ctx.bias*ctx.biasN/(ctx.biasN+6)*1.2;
       f.cajon=Math.max(.05,Math.min(.95,.5+(rel-.5)*(dStr*cajonM+bias))); why.cajon=`cajón ${h.draw} de ${N}`+(ctx&&ctx.biasN&&race.dist<=2000?` · hoy los 3 primeros salieron ${ctx.bias>.05?"más por dentro":ctx.bias<-.05?"más por fuera":"repartidos"}`:""); }
-    if(runs.length){ const last=runs[0]; const dc=(CAT[last.cat]||2)-(CAT[race.cat]||2); f.clase=Math.max(.1,Math.min(.9,.5+.12*dc));
-      why.clase=(dc>0?"baja de categoría":dc<0?"sube de categoría":"misma categoría")+` (última: ${catShort(last.cat)} → hoy: ${catShort(race.cat)})`; }
-    else { f.clase=.5; why.clase="sin referencia"; }
+    f.clase=.5; why.clase=""; // se calcula abajo, comparando con el resto del lote
+
     { const hh=h.hist||[], gr=[...hh,...(h.runs||[]).filter(r=>!hh.some(x=>x.d===r.d))].filter(r=>r.g!=null);
       if(gr.length){ let s=0; for(const r of gr) s+=(posPts(r.pos)-.35)*(r.g/3); s/=gr.length;
         f.terreno=Math.max(.1,Math.min(.9,.5+s*3.2*(t/3)));
@@ -215,6 +229,16 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
     else { f.rivales=.5; why.rivales="sin datos de rivales"; }
     return {h,f,why};
   });
+  // Clase: nivel de categoría de cada caballo frente a la media del lote de hoy
+  { const C=out.map(o=>classLevel(o.h)), known=C.filter(Boolean), raceC=CAT[race.cat]??2;
+    const mean=known.length?known.reduce((a,c)=>a+c.lvl,0)/known.length:raceC;
+    out.forEach((o,i)=>{ const c=C[i];
+      if(!c){ o.f.clase=.5; o.why.clase=o.h.form&&o.h.form.length?"sin carreras con categoría conocida":"debutante: sin referencia de categoría"; return; }
+      const sh=c.n/(c.n+.6), lv=mean+(c.lvl-mean)*sh;
+      o.f.clase=Math.max(.08,Math.min(.92,.5+CLS.k*(lv-mean)));
+      const cats={}; for(const x of c.L) cats[catShort(x.cat)]=(cats[catShort(x.cat)]||0)+1;
+      o.why.clase=`nivel ${c.lvl.toFixed(1).replace(".",",")} (≈ ${lvlName(c.lvl)}) frente a ${mean.toFixed(1).replace(".",",")} de media del lote · hoy ${catShort(race.cat)} · ha corrido: `+Object.entries(cats).map(([k,v])=>v>1?`${k} ×${v}`:k).join(", "); }); }
+  return out;
 }
 function softmax(scores,T){ const mx=Math.max(...scores); const ex=scores.map(s=>Math.exp(T*(s-mx))); const Z=ex.reduce((a,b)=>a+b,0); return ex.map(e=>e/Z); }
 function scoreRace(race,stats,W,t,VIS,scratched,T,ctx,dayW){
@@ -327,4 +351,4 @@ function evalRaces(prepared,W,T){
     hit+=gt===0?1/eq:0; t3+=Math.max(0,Math.min(eq,3-gt))/eq; n++; }
   return {n,ll:ll/n,llU:llU/n,hit:hit/n,t3:t3/n};
 }
-if (typeof module!=="undefined") module.exports={CAT_INFO,catName,catShort,setGoing,meetingGroups,btFit,h2h,rivalCtx,ahead,setRefDate,getWin,buildHist,runPts,isoOf,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};
+if (typeof module!=="undefined") module.exports={CLS,CAT_INFO,catName,catShort,setGoing,meetingGroups,btFit,h2h,rivalCtx,ahead,setRefDate,getWin,buildHist,runPts,isoOf,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};
