@@ -19,7 +19,7 @@ Cabecera:
 
 | campo | ejemplo | para qué |
 |---|---|---|
-| `fecha` | `"2026-12-06"` | fecha de la jornada; marca la ventana de 3 meses |
+| `fecha` | `"2026-12-06"` | fecha de la jornada; marca la ventana de 12 meses |
 | `jornada` | `14` | nº de jornada (para las etiquetas) |
 | `prevision` | `"Previsión al 03/12: lluvia, 6–11 °C"` | opcional, sale arriba |
 | `visitantes` | `{"PASQUIER":0.75}` | valor previo (0–1) para jinetes sin montas en los datos |
@@ -46,7 +46,7 @@ Cada caballo, una línea:
 
 - `j` y `t` son los códigos de jinete y preparador **tal como salen en las jornadas** (`GELABERT`, `CH.DELCHER`…). Si no coinciden, la estadística no los encuentra.
 - `form`: la forma del programa, la más reciente primero.
-- Opcional: `eq` (equipo), `note` (texto), `lastOld` (`"20/06"` si no corre desde hace más de 3 meses) y `runs` (carreras sueltas con `d`, `dist`, `cat`, `pos`, `of`, `kg`, `g`, `txt`).
+- Opcional: `eq` (equipo), `note` (texto), `lastOld` (`"20/06"` si no corre desde hace más de 12 meses) y `runs` (carreras sueltas con `d`, `dist`, `cat`, `pos`, `of`, `kg`, `g`, `txt`).
 
 ## 3. Carreras en otros hipódromos → `datos/otras-carreras.csv`
 

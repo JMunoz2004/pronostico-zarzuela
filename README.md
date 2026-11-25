@@ -7,8 +7,8 @@ App de Streamlit (y página autocontenida `index.html`) que pronostica las carre
 ## Qué hace
 
 - **Probabilidad de ganar y de quedar entre los tres primeros** de cada caballo, a partir de nueve factores: forma, distancia, clase, terreno, rivales, jinete, preparador, peso y cajón. Los pesos se entrenan jornada a jornada con las anteriores (walk-forward) y se pueden cambiar con deslizadores.
-- **Forma y distancia con historial fechado:** para cada caballo se usan sus últimas 5 carreras de los últimos 3 meses, en cualquier hipódromo (La Zarzuela, San Sebastián, Francia…).
-  - Cada carrera pesa más cuanto más reciente es (vida media ≈ 4 semanas).
+- **Forma y distancia con historial fechado:** para cada caballo se usan sus últimas 5 carreras de los últimos 12 meses, en cualquier hipódromo (La Zarzuela, San Sebastián, Francia…).
+  - Cada carrera pesa más cuanto más reciente es (vida media ≈ 2 meses).
   - El puesto se corrige por el nº de participantes.
   - Con pocas carreras, el factor se acerca al neutro.
 - **Clase:** nivel de categoría de cada caballo con todas sus carreras conocidas (Listed, A, B, C, D, corregido por el puesto), comparado con el resto del lote: quien corre en categorías mejores sale por encima.

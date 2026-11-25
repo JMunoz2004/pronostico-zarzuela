@@ -55,8 +55,8 @@ function autoRuns(name, train, beforeIdx, J){
   return out.sort((a,b)=>b.idx-a.idx);
 }
 
-// ---------- Historial con fecha: últimas 5 carreras en los últimos 3 meses, en cualquier hipódromo ----------
-let REF_DATE="2026-11-29", WIN_FROM="2026-08-31"; const HIST_N=5, WIN_DAYS=90;
+// ---------- Historial con fecha: últimas 5 carreras en los últimos 12 meses, en cualquier hipódromo ----------
+let REF_DATE="2026-11-29", WIN_FROM="2026-08-31"; const HIST_N=5, WIN_DAYS=365;
 // Fecha de la carta: las carreras cuentan si son de los WIN_DAYS días anteriores
 function setRefDate(iso){ REF_DATE=iso; WIN_FROM=new Date(Date.parse(iso)-WIN_DAYS*864e5).toISOString().slice(0,10); return WIN_FROM; }
 const getWin=()=>({REF_DATE,WIN_FROM});
@@ -181,10 +181,10 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
   const anyForm=H.some(x=>x.form.length);
   const out=H.map(h=>{
     const f={}, why={};
-    if(h.hist && h.hist.length){ let s=0,ws_=0; for(const r of h.hist){ const w=Math.exp(-daysTo(r.date)/40); s+=w*runPts(r); ws_+=w; }
+    if(h.hist && h.hist.length){ let s=0,ws_=0; for(const r of h.hist){ const w=Math.exp(-daysTo(r.date)/90); s+=w*runPts(r); ws_+=w; }
       const n=h.hist.length, v=Math.min(1,.08+s/ws_*1.1); f.forma=.38+(v-.38)*n/(n+1);
-      why.forma=`${n} carrera${n>1?"s":""} en 3 meses: `+h.hist.map(r=>`${r.pos}º/${r.of||"?"} (${r.d})`).join(", ")+(n<3?" · pocas carreras: se acerca al neutro":""); }
-    else if(h.hist && h.lastOld){ f.forma=.32; why.forma=`sin carreras en los últimos 3 meses (última: ${h.lastOld})`; }
+      why.forma=`${n} carrera${n>1?"s":""} en 12 meses: `+h.hist.map(r=>`${r.pos}º/${r.of||"?"} (${r.d})`).join(", ")+(n<3?" · pocas carreras: se acerca al neutro":""); }
+    else if(h.hist && h.lastOld){ f.forma=.32; why.forma=`sin carreras en los últimos 12 meses (última: ${h.lastOld})`; }
     else if(h.hist && h.form.length){ const ws=[1,.8,.6,.45,.35]; let s=0,ws_=0; h.form.slice(0,5).forEach((p,i)=>{s+=ws[i]*posPts(p);ws_+=ws[i];});
       const v=Math.min(1,.08+s/ws_*1.05), n=Math.min(5,h.form.length)/2; f.forma=.38+(v-.38)*n/(n+1); why.forma=h.form.join("-")+" (programa; fechas sin confirmar, cuenta a medias)"; }
     else if(h.form.length){ const ws=[1,.8,.6,.45,.35]; let s=0,ws_=0; h.form.slice(0,5).forEach((p,i)=>{s+=ws[i]*posPts(p);ws_+=ws[i];});
