@@ -1,0 +1,16 @@
+# Estado de la pista de cada jornada. terreno: 0 bueno, 1 bueno a blando, 2 blando, 3 pesado/muy blando (vacío = no se sabe).
+# Se usa para el factor terreno de cada carrera anterior y, con 3 o más jornadas conocidas, para entrenar su peso.
+# La web del hipódromo no publica el parte de la pista: anótalo cada domingo (cerrar_jornada.py --terreno N lo hace solo).
+fecha;hipodromo;terreno;fuente
+2026-09-10;La Zarzuela;;
+2026-09-20;La Zarzuela;;
+2026-09-24;La Zarzuela;;
+2026-09-27;La Zarzuela;;
+2026-10-04;La Zarzuela;;
+2026-10-11;La Zarzuela;;
+2026-10-18;La Zarzuela;;
+2026-10-25;La Zarzuela;;
+2026-11-01;La Zarzuela;;
+2026-11-08;La Zarzuela;;
+2026-11-15;La Zarzuela;;
+2026-11-22;La Zarzuela;;

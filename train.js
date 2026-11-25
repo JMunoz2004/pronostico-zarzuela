@@ -22,6 +22,14 @@ const cols=csv.shift().split(";").map(s=>s.trim());
 const RUNS_EXTRA=csv.map(l=>{ const v=l.split(";"), o={}; cols.forEach((c,i)=>{ const x=(v[i]??"").trim(); if(x==="") return;
   o[c]=["r","dist","of","g","kg"].includes(c)?+x:c==="pos"&&/^\d+$/.test(x)?+x:x; }); return o; });
 const D={VISITORS:CARTA.visitantes||{}};
+// Estado de la pista por jornada (solo La Zarzuela; las de fuera llevan g en otras-carreras.csv)
+const GOING={}; for(const l of fs.readFileSync("datos/terreno.csv","utf8").split("\n")){ const t=l.trim(); if(!t||t.startsWith("#")||t.startsWith("fecha")) continue;
+  const [f,hip,g]=t.split(";"); if(g!==undefined&&g.trim()!==""&&/Zarzuela/i.test(hip||"La Zarzuela")) GOING[f.trim()]=+g; }
+M.setGoing(GOING);
+const nGoing=J.filter(d=>GOING[M.isoOf(d)]!=null).length;
+console.log("jornadas con estado de pista:",nGoing,"de",J.length);
+const GROUPS=M.meetingGroups(train,RUNS_EXTRA,CARTA.carreras);
+console.log("grupos de carreras para rivales:",GROUPS.length);
 
 // Comprobaciones de integridad
 for(const r of train){ const nos=r.h.map(h=>h.no);
@@ -30,12 +38,13 @@ for(const r of train){ const nos=r.h.map(h=>h.no);
   for(const h of r.h) if(!h.name||!h.j||!h.t||!(h.kg>40)) throw new Error(`dato incompleto ${r.d} ${r.r}ª nº${h.no}`); }
 console.log("carreras:",train.length,"caballos:",train.reduce((a,r)=>a+r.h.length,0));
 
-const prep=M.prepareTrain(train,J,D.VISITORS);
+const prep=M.prepareTrain(train,J,D.VISITORS,GROUPS);
+const FIX={fixed:nGoing>=3?[]:["terreno"]};
 const rows=[];
 // Pesos para cada jornada desde la segunda hasta la de la carta, entrenados con todas las anteriores
 for(let i=1;i<=J.length;i++){
   const d=i<J.length?J[i]:DREF;
-  const fit=M.fitWeights(prep.filter(r=>r.idx<i));
+  const fit=M.fitWeights(prep.filter(r=>r.idx<i),FIX);
   const row={d,jornada:i+J0,trainedOn:J.slice(0,i).join(", "),nTrain:prep.filter(r=>r.idx<i).length,W:fit.W,T:fit.T};
   if(i<J.length){ const test=prep.filter(r=>r.idx===i);
     row.test=M.evalRaces(test,fit.W,fit.T); row.testDef=M.evalRaces(test,M.DEF_W,M.DEF_T); }
@@ -52,7 +61,7 @@ let g={h2:0,s2:0,h3:0,s3:0,n:0};
 for(let i=1;i<J.length;i++){ const {W,T}=rows[i-1];
   for(const r of train.filter(x=>x.d===J[i])){ if(r.arr.length<3) continue;
     const prevRaces=train.filter(x=>J.indexOf(x.d)<i); const st=M.buildStats(prevRaces);
-    const race={dist:r.dist,cat:r.cat,horses:r.h.map(h=>({...h,runs:M.autoRuns(h.name,train,i,J)}))};
+    const race={dist:r.dist,cat:r.cat,horses:r.h.map(h=>({...h,runs:M.autoRuns(h.name,train,i,J)}))}; race.rival=M.rivalCtx(GROUPS,race,M.isoOf(r.d));
     const res=M.scoreRace(race,st,W,1,D.VISITORS,null,T); const p=res.map(o=>o.p); const pos=no=>res.findIndex(o=>o.h.no===no);
     const s2=[pos(r.arr[0]),pos(r.arr[1])], s3=[...s2,pos(r.arr[2])];
     const sim=M.simulate(res,null,6000,r.r*31+i);
@@ -64,7 +73,7 @@ for(const k of ["h2","s2","h3","s3"]) g[k]/=g.n;
 console.log("GEMELAS/TRIOS (log-pérdida media, menos es mejor):",JSON.stringify(g));
 
 const final=rows[rows.length-1];
-const out={CARTA,TRAIN:train,JORNADAS:J,J0,RUNS_EXTRA,TRAINED:{rows,summary,combo:g,final:{W:final.W,T:final.T}}};
+const out={GOING,CARTA,TRAIN:train,JORNADAS:J,J0,RUNS_EXTRA,TRAINED:{rows,summary,combo:g,final:{W:final.W,T:final.T}}};
 fs.writeFileSync("src/generated.js",`// Generado por train.js a partir de datos/ — no editar a mano.
 const GEN = ${JSON.stringify(out)};
 if (typeof module!=="undefined") module.exports={GEN};

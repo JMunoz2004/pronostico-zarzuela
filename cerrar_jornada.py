@@ -2,7 +2,9 @@
 para que esa jornada cuente en el entrenamiento y en la estadística de jinetes y preparadores.
 
 Uso (los 5 primeros de cada carrera; las bajas, si las hubo, con --bajas):
-    python3 cerrar_jornada.py 1=2-4-1-5-3 2=5-1-9-10-3 3=5-9-6-8-1 4=11-6-9-1-7 5=7-8-4-1-2 6=2-1-6-9-4 --bajas 3:4 6:3,7
+    python3 cerrar_jornada.py 1=2-4-1-5-3 2=5-1-9-10-3 3=5-9-6-8-1 4=11-6-9-1-7 5=7-8-4-1-2 6=2-1-6-9-4 --bajas 3:4 6:3,7 --terreno 1
+
+--terreno: estado de la pista ese día (0 bueno, 1 bueno a blando, 2 blando, 3 pesado). Se guarda en datos/terreno.csv.
 
 Después:
     1. Cambia datos/carta.json por la carta del domingo siguiente (o déjala: el entrenamiento ignora jornadas
@@ -18,6 +20,7 @@ from pathlib import Path
 ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
 ap.add_argument("llegadas", nargs="+", help="carrera=llegada, por ejemplo 3=5-9-6-8-1")
 ap.add_argument("--bajas", nargs="*", default=[], help="carrera:nº,nº de los retirados, por ejemplo 3:4,7")
+ap.add_argument("--terreno", type=int, choices=[0, 1, 2, 3], help="estado de la pista: 0 bueno, 1 bueno a blando, 2 blando, 3 pesado")
 ap.add_argument("--carta", default="datos/carta.json")
 ap.add_argument("--forzar", action="store_true", help="sobrescribe el archivo de la jornada si ya existe")
 a = ap.parse_args()
@@ -71,3 +74,13 @@ if out.exists() and not a.forzar:
     sys.exit(f"{out} ya existe (usa --forzar para sobrescribirlo)")
 out.write_text("\n".join(lines) + "\n", encoding="utf-8")
 print(f"Guardado {out} con {len(lleg)} carreras.")
+
+tp = Path("datos/terreno.csv")
+if a.terreno is not None:
+    rows = tp.read_text(encoding="utf-8").splitlines() if tp.exists() else ["fecha;hipodromo;terreno;fuente"]
+    hip = carta.get("hipodromo", "La Zarzuela")
+    rows = [r for r in rows if not r.startswith(fecha + ";")] + [f"{fecha};{hip};{a.terreno};cerrar_jornada.py"]
+    tp.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    print(f"Estado de la pista del {dm}: {['bueno', 'bueno a blando', 'blando', 'pesado'][a.terreno]} (datos/terreno.csv)")
+else:
+    print("Aviso: no has indicado --terreno. Apúntalo en datos/terreno.csv si lo sabes: es importante para el factor terreno.")

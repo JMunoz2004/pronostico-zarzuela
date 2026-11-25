@@ -10,9 +10,9 @@ const CIELO = {
   sol:{label:"Soleado",d:-.1}, nubes:{label:"Nublado",d:0}, llovizna:{label:"Llovizna",d:.25},
   lluvia:{label:"Lluvia",d:.6}, fuerte:{label:"Lluvia fuerte",d:1}
 };
-const DEF_W = {forma:30,distancia:15,jinete:15,preparador:15,peso:10,cajon:5,clase:10,terreno:5};
+const DEF_W = {forma:27,distancia:13,jinete:13,preparador:13,peso:9,cajon:5,clase:10,terreno:5,rivales:10};
 const DEF_T = 4;
-const FNAMES = {forma:"Forma",distancia:"Distancia",jinete:"Jinete",preparador:"Preparador",peso:"Peso",cajon:"Cajón",clase:"Clase",terreno:"Terreno"};
+const FNAMES = {forma:"Forma",distancia:"Distancia",jinete:"Jinete",preparador:"Preparador",peso:"Peso",cajon:"Cajón",clase:"Clase",terreno:"Terreno",rivales:"Rivales"};
 const FKEYS = Object.keys(FNAMES);
 
 function terrainFor(n, base, weather){
@@ -37,12 +37,15 @@ function buildStats(races){
     for(const k in M){ const s=M[k]; let c=0; for(const x of arr) if(x<s.shr) c++; s.pct=arr.length?(c+.5)/arr.length:.5; s.f=.15+.7*s.pct; } }
   return {J,T,mean};
 }
+// Estado de la pista de cada jornada (datos/terreno.csv): {"AAAA-MM-DD": 0..3}
+let GOING_BY_DATE={};
+function setGoing(m){ GOING_BY_DATE=m||{}; }
 // Carreras anteriores de un caballo dentro de las jornadas de entrenamiento (puesto exacto si fue 1º–5º; si no, "6+")
 function autoRuns(name, train, beforeIdx, J){
   const key=normName(name), out=[];
   for(const r of train){ const idx=J.indexOf(r.d); if(idx<0||idx>=beforeIdx) continue;
     const h=r.h.find(x=>normName(x.name)===key); if(!h) continue; const i=r.arr.indexOf(h.no);
-    out.push({d:r.d,idx,dist:r.dist,cat:r.cat,pos:i>=0?i+1:"6+",of:r.h.length,kg:h.kg,txt:`La Zarzuela, ${r.r}ª carrera`,auto:true}); }
+    const gg=GOING_BY_DATE[isoOf(r.d)]; out.push({d:r.d,idx,dist:r.dist,cat:r.cat,pos:i>=0?i+1:"6+",of:r.h.length,kg:h.kg,draw:h.draw,j:h.j,...(gg!=null?{g:gg}:{}),txt:`La Zarzuela, ${r.r}ª carrera`,auto:true}); }
   return out.sort((a,b)=>b.idx-a.idx);
 }
 
@@ -75,6 +78,53 @@ function runPts(r){ const s=String(r.pos); let p=parseInt(s,10); if(isNaN(p)) re
   if(s.includes("+")) p=r.of?Math.max(6,Math.round((6+r.of)/2)):7;
   const rel=r.of>1?1-(p-1)/(r.of-1):.5; return .6*(FPTS[p]??.06)+.4*rel; }
 const daysTo=iso=>(Date.parse(REF_DATE)-Date.parse(iso))/864e5;
+
+// ---------- Rivales: enfrentamientos directos y cruzados ----------
+// Todas las carreras conocidas se agrupan (misma carrera = mismo grupo) y de cada grupo salen pares «A llegó por delante de B».
+// Con esos pares se ajusta un modelo de Bradley-Terry: un caballo que batió a rivales que a su vez batieron a otros sube aunque
+// no se haya cruzado nunca con los de hoy (rivales cruzados). Cada resultado pesa según lo reciente que sea, lo parecida que sea
+// la distancia y los kilos que llevaba cada uno.
+function meetingGroups(train, extra, card){
+  const G={}, trainDates=new Set(train.map(r=>isoOf(r.d)));
+  const get=(key,base)=>G[key]||(G[key]={...base,key,ent:[]});
+  for(const r of train){ const date=isoOf(r.d), gg=GOING_BY_DATE[date];
+    const g=get(`${date}|La Zarzuela|${r.r}`,{date,course:"La Zarzuela",dist:r.dist,cat:r.cat,g:gg??null,of:r.h.length});
+    for(const h of r.h){ const i=r.arr.indexOf(h.no); g.ent.push({name:normName(h.name),disp:h.name,pos:i>=0?i+1:null,out:i<0,kg:h.kg,draw:h.draw,j:h.j}); } }
+  const addRun=(name,x)=>{ if(!x.date||/^(NP|TBE)$/i.test(String(x.pos))) return; const lz=/Zarzuela/.test(x.course||"");
+    if(lz&&trainDates.has(x.date)) return; // esa jornada ya está entera en los datos
+    const key=`${x.date}|${x.course}|${x.r||x.dist}`, n=normName(name);
+    const g=get(key,{date:x.date,course:x.course,dist:x.dist,cat:x.cat,g:x.g??(lz?GOING_BY_DATE[x.date]:null)??null,of:x.of});
+    if(g.ent.some(e=>e.name===n)) return; const s=String(x.pos), p=parseInt(s,10);
+    g.ent.push({name:n,disp:name,pos:isNaN(p)||s.includes("+")?null:p,out:s.includes("+"),kg:x.kg}); };
+  for(const e of (extra||[])) addRun(e.name,e);
+  for(const r of (card||[])) for(const h of r.horses) for(const m of (h.runs||[])){ const date=isoOf(m.d); if(date) addRun(h.name,{...m,date,course:courseOf(m)}); }
+  return Object.values(G).filter(g=>g.ent.length>1).sort((a,b)=>a.date<b.date?-1:1);
+}
+// true si a llegó por delante de b, false si detrás, null si no se sabe (los dos fuera de los 5 primeros)
+function ahead(a,b){ if(a.pos!=null&&b.pos!=null) return a.pos<b.pos; if(a.pos!=null&&a.pos<=5&&b.out) return true; if(b.pos!=null&&b.pos<=5&&a.out) return false; return null; }
+function btFit(groups, asOf, dist){
+  const pairs=[], seen=new Set();
+  for(const g of groups){ if(g.date>=asOf) continue; const days=(Date.parse(asOf)-Date.parse(g.date))/864e5; if(days>200) continue;
+    const wt=Math.exp(-days/90)*(.4+.6*Math.exp(-Math.abs((g.dist||dist)-dist)/(.3*dist)))*3/Math.max(2,g.ent.length-1); // cada carrera vale ~3 «partidos» por caballo
+    for(let i=0;i<g.ent.length;i++) for(let k=i+1;k<g.ent.length;k++){ const a=g.ent[i], b=g.ent[k], res=ahead(a,b); if(res==null) continue;
+      const [w,l]=res?[a,b]:[b,a]; let adj=1; if(w.kg&&l.kg) adj=Math.max(.7,Math.min(1.3,1+.05*(w.kg-l.kg)));
+      pairs.push([w.name,l.name,wt*adj]); seen.add(w.name); seen.add(l.name); } }
+  const r={}, W={}, n={}; for(const x of seen){ r[x]=1; W[x]=0; n[x]=0; }
+  for(const [w,l,wt] of pairs){ W[w]+=wt; n[w]+=wt; n[l]+=wt; }
+  const P=1.5; // partidos ficticios contra un rival medio: sin datos, el nivel se queda en 1
+  for(let it=0;it<60;it++){ const den={}; for(const x of seen) den[x]=2*P/(r[x]+1);
+    for(const [w,l,wt] of pairs){ const d=wt/(r[w]+r[l]); den[w]+=d; den[l]+=d; }
+    for(const x of seen) r[x]=(W[x]+P)/den[x]; }
+  return {r,n};
+}
+// Enfrentamientos directos de un caballo con los rivales que tiene hoy
+function h2h(groups, name, others, asOf){
+  const me=normName(name), set=new Set(others.map(normName)), out=[];
+  for(const g of groups){ if(g.date>=asOf) continue; const a=g.ent.find(e=>e.name===me); if(!a) continue;
+    for(const b of g.ent){ if(b===a||!set.has(b.name)) continue; out.push({date:g.date,course:g.course,dist:g.dist,g:g.g,of:g.of,me:a,rv:b,res:ahead(a,b)}); } }
+  return out.sort((x,y)=>x.date<y.date?1:-1);
+}
+function rivalCtx(groups, race, asOf){ return {bt:btFit(groups,asOf,race.dist),groups,asOf}; }
 
 // ---------- Lo que va de día ----------
 // A partir de las llegadas ya introducidas hoy: puntos de cada jinete/preparador frente a lo esperado
@@ -142,6 +192,16 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
         f.terreno=Math.max(.1,Math.min(.9,.5+s*3.2*(t/3)));
         why.terreno=gr.map(r=>`${TERR_NAMES[r.g].toLowerCase()}: ${r.pos}º`).join(", ")+(t<.5?" (hoy pista buena: apenas cuenta)":""); }
       else { f.terreno=.5; why.terreno="sin carreras con terreno conocido"; } }
+    if(race.rival){ const {bt,groups,asOf}=race.rival, me=normName(h.name);
+      // los caballos sin resultados comparables cuentan como la media (geométrica) de los que sí tienen
+      const known=H.map(x=>bt.r[normName(x.name)]).filter(v=>v!=null), gm=known.length?Math.exp(known.reduce((a,v)=>a+Math.log(v),0)/known.length):1;
+      const R=x=>bt.r[normName(x.name)]??gm, rh=R(h), others=H.filter(x=>x!==h), ps=others.map(o=>rh/(rh+R(o)));
+      f.rivales=ps.length?Math.max(.05,Math.min(.95,ps.reduce((a,c)=>a+c,0)/ps.length)):.5;
+      const d=h2h(groups,h.name,others.map(o=>o.name),asOf), w=d.filter(x=>x.res===true).length, l=d.filter(x=>x.res===false).length;
+      const ev=bt.n[me]||0;
+      why.rivales=(d.length?`directos con los de hoy: ${w} por delante, ${l} por detrás`:"sin enfrentamientos directos con los de hoy")+
+        (bt.r[me]!=null?` · nivel por rivales cruzados ${rh.toFixed(2).replace(".",",")} (1 = caballo medio)`:" · sin resultados que lo comparen: neutro"); }
+    else { f.rivales=.5; why.rivales="sin datos de rivales"; }
     return {h,f,why};
   });
 }
@@ -223,11 +283,12 @@ function riskyPick(res,odds){
 
 // ---------- Entrenamiento ----------
 // Prepara cada carrera de entrenamiento con estadística y carreras previas calculadas SOLO con jornadas anteriores.
-function prepareTrain(train,J,VIS){
+function prepareTrain(train,J,VIS,groups){
   return train.map(r=>{ const idx=J.indexOf(r.d); const prev=train.filter(x=>J.indexOf(x.d)<idx);
-    const st=buildStats(prev);
+    const st=buildStats(prev), date=isoOf(r.d);
     const race={dist:r.dist,cat:r.cat,horses:r.h.map(h=>({...h,runs:autoRuns(h.name,train,idx,J)}))};
-    const fx=features(race,st,1,VIS||{},null);
+    if(groups) race.rival=rivalCtx(groups,race,date);
+    const fx=features(race,st,GOING_BY_DATE[date]??1,VIS||{},null);
     return {d:r.d,r:r.r,idx,arr:r.arr,n:r.h.length,nos:fx.map(o=>o.h.no),X:fx.map(o=>FKEYS.map(k=>o.f[k]))}; });
 }
 // Logit condicional "explotado" sobre los 3 primeros (pesos 1, 0,5, 0,3): maximiza la verosimilitud del orden de llegada.
@@ -255,4 +316,4 @@ function evalRaces(prepared,W,T){
     hit+=gt===0?1/eq:0; t3+=Math.max(0,Math.min(eq,3-gt))/eq; n++; }
   return {n,ll:ll/n,llU:llU/n,hit:hit/n,t3:t3/n};
 }
-if (typeof module!=="undefined") module.exports={setRefDate,getWin,buildHist,runPts,isoOf,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};
+if (typeof module!=="undefined") module.exports={setGoing,meetingGroups,btFit,h2h,rivalCtx,ahead,setRefDate,getWin,buildHist,runPts,isoOf,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};

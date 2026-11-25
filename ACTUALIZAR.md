@@ -5,10 +5,13 @@
 Con la carta que había en `datos/carta.json` y la llegada oficial (los 5 primeros de cada carrera):
 
 ```bash
-python3 cerrar_jornada.py 1=2-4-1-5-3 2=5-1-9-10-3 3=5-9-6-8-1 4=11-6-9-1-7 5=7-8-4-1-2 6=2-1-6-9-4 --bajas 3:4 6:3,7
+python3 cerrar_jornada.py 1=2-4-1-5-3 2=5-1-9-10-3 3=5-9-6-8-1 4=11-6-9-1-7 5=7-8-4-1-2 6=2-1-6-9-4 --bajas 3:4 6:3,7 --terreno 1
 ```
 
-`--bajas` solo si hubo retirados (carrera:nº,nº). Crea `datos/jornadas/AAAA-MM-DD.txt` y avisa si un número no cuadra.
+- `--bajas` solo si hubo retirados (carrera:nº,nº).
+- `--terreno` es el estado de la pista ese día: 0 bueno, 1 bueno a blando, 2 blando, 3 pesado. **Ponlo siempre**: el hipódromo no lo publica después y es clave para el factor terreno. Se guarda en `datos/terreno.csv`, donde también puedes completar a mano las jornadas pasadas si las recuerdas.
+
+Crea `datos/jornadas/AAAA-MM-DD.txt` y avisa si un número no cuadra.
 
 ## 2. Poner la carta nueva en `datos/carta.json`
 
