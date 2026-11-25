@@ -16,9 +16,9 @@ const CIELO = {
   sol:{label:"Soleado",d:-.1}, nubes:{label:"Nublado",d:0}, llovizna:{label:"Llovizna",d:.25},
   lluvia:{label:"Lluvia",d:.6}, fuerte:{label:"Lluvia fuerte",d:1}
 };
-const DEF_W = {forma:27,distancia:13,jinete:13,preparador:13,peso:9,cajon:5,clase:10,terreno:5,rivales:10};
+const DEF_W = {forma:27,distancia:13,jinete:13,preparador:13,peso:9,cajon:5,clase:10,terreno:5,rivales:10,edad:5};
 const DEF_T = 4;
-const FNAMES = {forma:"Forma",distancia:"Distancia",jinete:"Jinete",preparador:"Preparador",peso:"Peso",cajon:"Cajón",clase:"Clase",terreno:"Terreno",rivales:"Rivales"};
+const FNAMES = {forma:"Forma",distancia:"Distancia",jinete:"Jinete",preparador:"Preparador",peso:"Peso",cajon:"Cajón",clase:"Clase",terreno:"Terreno",rivales:"Rivales",edad:"Edad"};
 const FKEYS = Object.keys(FNAMES);
 
 function terrainFor(n, base, weather){
@@ -175,6 +175,16 @@ function classLevel(h){
   const W=L.reduce((a,x)=>a+x.w,0), avg=L.reduce((a,x)=>a+x.w*x.v,0)/W, best=Math.max(...L.filter(x=>x.w>=.3).map(x=>x.v),avg);
   return {lvl:CLS.best*best+(1-CLS.best)*avg,n:W,L}; }
 const lvlName=v=>v>=5.5?"Listed int.":v>=4.5?"Listed local":v>=3.5?"A":v>=2.5?"B":v>=1.5?"C":"D";
+// ---------- Edad ----------
+// Curva de rendimiento por edad (Gramm y Marksteiner, J. Equine Sci. 2010, 274 purasangres): el pico está en ~4,45 años;
+// de 2 a 4½ años se mejora ~10 cuerpos en velocidad y ~15 en fondo, y en los 5 años siguientes se pierden ~6 cuerpos en
+// velocidad y ~9,5 en fondo (cae más deprisa en distancias largas). La edad oficial cambia el 1 de enero; la real es ~0,25
+// años menor en enero y ~0,6 mayor en noviembre. Como los jóvenes ya reciben kilos de descargo (factor peso), su desventaja
+// se cuenta a la mitad; el declive de los mayores, entero.
+function ageLengths(age, dist, iso){
+  const m=iso?+iso.slice(5,7):11, a=age-.25+(m-1)/12, PEAK=4.45, route=Math.max(0,Math.min(1,(dist-1300)/1000));
+  const up=10+5*route, down=6+3.5*route;
+  return a<PEAK ? -.5*up*Math.pow((PEAK-a)/2.45,2) : -down*Math.pow((a-PEAK)/5,2); }
 function features(race,stats,t,VIS,scratched,ctx,dayW){
   const sc=scratched||new Set();
   const H=race.horses.filter(h=>!sc.has(h.no)), N=race.horses.length;
@@ -232,6 +242,14 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
     else { f.rivales=.5; why.rivales="sin datos de rivales"; }
     return {h,f,why};
   });
+  // Edad: cuerpos ganados/perdidos por la edad frente a la media del lote (si todos tienen la misma edad, no cuenta)
+  { const L=out.map(o=>o.h.age?ageLengths(o.h.age,race.dist,race.date):null), k=L.filter(v=>v!=null), mean=k.length?k.reduce((a,c)=>a+c,0)/k.length:0;
+    const same=new Set(out.map(o=>o.h.age)).size<=1;
+    out.forEach((o,i)=>{ const v=L[i];
+      if(v==null){ o.f.edad=.5; o.why.edad="edad desconocida"; return; }
+      if(same){ o.f.edad=.5; o.why.edad=`${o.h.age} años, como todos los del lote: no cuenta`; return; }
+      const d=v-mean; o.f.edad=Math.max(.1,Math.min(.9,.5+.035*d));
+      o.why.edad=`${o.h.age} años${o.h.age<=3?" (todavía mejorando)":o.h.age<=5?" (edad de máximo rendimiento)":" (en declive por edad)"} · ${d>=0?"+":"−"}${Math.abs(d).toFixed(1).replace(".",",")} cuerpos frente a la media de edad del lote`; }); }
   // Clase: nivel de categoría de cada caballo frente a la media del lote de hoy
   { const C=out.map(o=>classLevel(o.h)), known=C.filter(Boolean), raceC=CAT[race.cat]??2;
     const mean=known.length?known.reduce((a,c)=>a+c.lvl,0)/known.length:raceC;
@@ -333,7 +351,7 @@ function prepareTrain(train,J,VIS,groups){
 // β_k = T·w_k/Σw ≥ 0; regularización L2 hacia los pesos por defecto para no sobreajustar con pocas carreras.
 function fitWeights(prepared, opts={}){
   const lam=opts.lambda??4, it=opts.iters??1500, lr=opts.lr??.4;
-  const fixed=opts.fixed||["terreno"]; // el terreno no se puede entrenar (no hay estado de pista de las jornadas pasadas)
+  const fixed=[...(opts.fixed||["terreno"]),"edad"]; // edad: las jornadas no guardan la edad de cada participante, así que su peso no se entrena // el terreno no se puede entrenar (no hay estado de pista de las jornadas pasadas)
   const ws0=FKEYS.reduce((a,k)=>a+DEF_W[k],0);
   const b0=FKEYS.map(k=>DEF_T*DEF_W[k]/ws0); let b=b0.slice();
   const dw=[1,.5,.3];
@@ -354,4 +372,4 @@ function evalRaces(prepared,W,T){
     hit+=gt===0?1/eq:0; t3+=Math.max(0,Math.min(eq,3-gt))/eq; n++; }
   return {n,ll:ll/n,llU:llU/n,hit:hit/n,t3:t3/n};
 }
-if (typeof module!=="undefined") module.exports={CLS,CAT_INFO,catName,catShort,setGoing,meetingGroups,btFit,h2h,rivalCtx,ahead,setRefDate,getWin,buildHist,runPts,isoOf,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};
+if (typeof module!=="undefined") module.exports={ageLengths,CLS,CAT_INFO,catName,catShort,setGoing,meetingGroups,btFit,h2h,rivalCtx,ahead,setRefDate,getWin,buildHist,runPts,isoOf,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};
