@@ -118,6 +118,11 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 </div>
 <div id="dHist"></div>
 </div></section>
+<section class="band" style="padding-top:0"><div class="wrap">
+<h2 class="cond" style="font-size:32px;margin:0 0 6px">Pedigrí</h2>
+<p class="small" style="margin:0 0 12px">Padre, madre y abuelo materno de cada caballo de la carrera seleccionada, con sus ganancias. Fuente: fichas de A Galopar.</p>
+<div id="ped"></div>
+</div></section>
 <section class="band" style="background:var(--card);border-top:1px solid var(--line)"><div class="wrap">
 <div class="prose"><h2 class="cond">Pesos entrenados jornada a jornada</h2>
 <p><span id="wfintro"></span> El terreno no se entrena porque no hay parte oficial del estado de la pista de esas jornadas.</p></div>
@@ -253,7 +258,7 @@ function race(){
       (ol?`<p class="small" style="margin:10px 0 4px">Anteriores o sin fecha (solo para terreno y como referencia)</p><ul class="runs" style="margin-top:0">${ol}</ul>`:"");
     const evc=v.ev==null?"":`<span class="ev ${v.ev>0?"pos":"neg"}">${v.ev>0?"+":""}${(v.ev*100).toFixed(0)} %</span>`;
     return `<tr class="row" tabindex="0" data-no="${h.no}" aria-expanded="${isO}"><td class="n">${i+1}</td><td><span style="display:flex;gap:8px;align-items:center">${cloth(h.no)}<span><span class="hn">${esc(h.name)}</span> <span class="small">${esc(h.eq||"")}</span><br><span class="small">${h.age} años · ${esc(h.c)}</span></span></span></td><td>${esc(h.jn)}<br><span class="small">${esc(tname(h.t))}</span></td><td class="n">${h.draw}</td><td class="n">${String(h.kg).replace(".",",")}</td><td class="fm">${h.form.length?esc(h.form.join("-")):"debuta"}<br><span class="small">${h.form.length>1?regLabel(o.sig):"sin datos"}</span></td><td class="n"><b>${pct(o.p)}</b><br><span class="small">podio ${pct(o.p3)}</span></td><td class="n">${dec(v.fair)}<br><span class="small">valor ≥ ${dec(v.minOdd)}</span></td><td class="n"><input class="odd" type="number" inputmode="decimal" step="0.1" min="1" id="od-${r.n}-${h.no}" data-no="${h.no}" value="${odds[h.no]??""}" placeholder="cuota" aria-label="Cuota de ${esc(h.name)}"></td><td class="n">${evc}</td></tr>`+
-    (isO?`<tr class="det"><td colspan="10">${h.note?`<p style="margin:0 0 10px"><b>${esc(h.note)}</b></p>`:""}<div class="fac">${fac}</div>${runs}</td></tr>`:"");}).join("");
+    (isO?`<tr class="det"><td colspan="10">${h.ag?`<p class="small" style="margin:0 0 8px">Pedigrí: <b>${esc(h.ag.padre)}</b> y <b>${esc(h.ag.madre)}</b>${h.ag.abuelo?` (por ${esc(h.ag.abuelo)})`:""}${h.ag.gan!=null?` · ganancias ${eur(h.ag.gan)} en ${h.ag.cc} carreras (${h.ag.vic} victorias)`:""} · <a href="https://www.agalopar.com/agt/bd/fichacaballocompleta2.asp?id=${h.ag.id}" target="_blank" rel="noopener">ficha en A Galopar</a></p>`:""}${h.note?`<p style="margin:0 0 10px"><b>${esc(h.note)}</b></p>`:""}<div class="fac">${fac}</div>${runs}</td></tr>`:"");}).join("");
   const presetOpts=PRESETS.map(p=>`<option value="${p.id}" ${S.preset===p.id?"selected":""}>${esc(p.label)}</option>`).join("")+`<option value="custom" ${S.preset==="custom"?"selected":""}>Personalizados</option>`;
   const sl=FKEYS.map(k=>`<label class="sl" for="w-${k}"><span>${FNAMES[k]}</span><input type="range" id="w-${k}" data-k="${k}" min="0" max="50" value="${S.w[k]}"><span class="n">${S.w[k]}</span></label>`).join("");
   const scr=r.horses.map(h=>`<button class="scr" data-scr="${h.no}" aria-pressed="${sc.has(h.no)}">${cloth(h.no)}${esc(h.name.replace(/ \(.*\)/,""))}</button>`).join("");
@@ -309,7 +314,17 @@ function wf(){
   const c=TRAINED.combo;
   document.getElementById("cmpTxt").innerHTML=`Prueba en ${c.n} carreras (pérdida logarítmica, menos es mejor): gemela real ${c.s2.toFixed(3).replace(".",",")} con la simulación frente a ${c.h2.toFixed(3).replace(".",",")} con Harville; trío real ${c.s3.toFixed(3).replace(".",",")} frente a ${c.h3.toFixed(3).replace(".",",")}.`;
 }
-function all(){tabs();race();sum();dhist();}
+const eur=v=>v==null?"—":v.toLocaleString("es-ES")+" €";
+function ped(){ const r=RACESX.find(x=>x.n===S.cur), sc=scrSet(r.n); let tP=0,tM=0,tC=0,anyPM=false;
+  const rows=r.horses.map(h=>{ const a=h.ag||{}, gp=a.ganPadre??null, gm=a.ganMadre??null, s=gp!=null||gm!=null?(gp||0)+(gm||0):null;
+    if(gp!=null){tP+=gp;anyPM=true;} if(gm!=null){tM+=gm;anyPM=true;} if(a.gan!=null&&!sc.has(h.no)) tC+=a.gan;
+    return `<tr${sc.has(h.no)?' style="opacity:.45"':""}><td class="hn2">${cloth(h.no)} <span class="hn">${esc(h.name)}</span>${a.id?` <a class="small" href="https://www.agalopar.com/agt/bd/fichacaballocompleta2.asp?id=${a.id}" target="_blank" rel="noopener">ficha</a>`:""}</td>
+<td>${esc(a.padre||"—")}</td><td class="n">${eur(gp)}</td><td>${esc(a.madre||"—")}${a.abuelo?` <span class="small">(por ${esc(a.abuelo)})</span>`:""}</td><td class="n">${eur(gm)}</td><td class="n"><b>${eur(s)}</b></td><td class="n">${eur(a.gan)}${a.cc!=null?`<br><span class="small">${a.cc} carr. · ${a.vic} vict.</span>`:""}</td></tr>`; }).join("");
+  document.getElementById("ped").innerHTML=`<div class="scroll dh"><table><thead><tr><th>Caballo</th><th>Padre</th><th class="n">Ganancias padre</th><th>Madre (abuelo materno)</th><th class="n">Ganancias madre</th><th class="n">Padre + madre</th><th class="n">Ganancias del caballo</th></tr></thead><tbody>${rows}</tbody>
+<tfoot><tr><td><b>Suma de la carrera</b> <span class="small">(sin retirados)</span></td><td></td><td class="n">${anyPM?eur(tP):"—"}</td><td></td><td class="n">${anyPM?eur(tM):"—"}</td><td class="n"><b>${anyPM?eur(tP+tM):"—"}</b></td><td class="n"><b>${eur(tC)}</b></td></tr></tfoot></table></div>
+<p class="small">Las fichas de A Galopar dan el padre, la madre y el abuelo materno, pero no las ganancias del padre ni de la madre (están en las fichas de ellos). Se añaden en <code>datos/carta.json</code> con <code>"ganPadre"</code> y <code>"ganMadre"</code> dentro de <code>"ag"</code>. «—» = sin dato; las ganancias de Asahi y Eolo no se ponen porque su ficha no está al día.</p>`;
+}
+function all(){tabs();race();sum();dhist();ped();}
 document.getElementById("base").value=S.base;
 document.addEventListener("click",e=>{ if(e.target.id==="dAny"){ S.dr={...dRange(),min:800,max:5000,auto:false}; save(); dhist(); return; } if(e.target.id==="dReset"){ S.dr={...dRange(),auto:true}; save(); dhist(); return; } const t=e.target.closest(".tab"); if(t){S.cur=+t.dataset.n; open.clear(); save(); all(); return;}
   const s=e.target.closest("[data-scr]"); if(s){const n=S.cur, no=+s.dataset.scr, set=scrSet(n); set.has(no)?set.delete(no):set.add(no); S.scr[n]=[...set]; save(); tabs(); race(); sum(); document.querySelector(`[data-scr="${no}"]`)?.focus(); return;}

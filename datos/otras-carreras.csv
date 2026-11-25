@@ -1,5 +1,6 @@
 # Carreras de los participantes que no están en datos/jornadas (otros hipódromos, otras fechas, temporadas anteriores).
-# Fuente principal: base de datos de A Galopar (agalopar.com, revista nº 196 y fichas de caballos). Separador ;
+# Fuente: A Galopar (revista nº 196 y fichas de agalopar.com/agt/bd). Separador ;
+# cat: la oficial de la ficha si la da; si no, por importe del 1er premio.
 # r = código de carrera de A Galopar (sirve para juntar a los caballos que corrieron la misma carrera).
 # cat por importe del 1er premio: LI ≥ 50.000, LL 35.000–49.999, A 24.000–34.999, B 15.000–23.999, C 8.000–14.999, D 3.500–7.999; FR/GB = extranjero.
 # g = terreno: -1 duro, 0 bueno, 1 algo blando / bueno a blando, 2 blando, 3 pesado / muy pesado; vacío en arena o si no se sabe.
@@ -62,10 +63,10 @@ date;course;r;dist;cat;of;name;pos;g;kg;txt;j
 2026-09-02;San Sebastián;304;2400;D;6;DON BOSCO;1;0;59.5;;J. Zambudio
 2026-09-02;San Sebastián;304;2400;D;6;DANCELOT;4;0;56.5;;V. Alonso V.
 2026-08-30;San Sebastián;298;2000;D;4;RONCAL;1;0;60;;Sr. De Eusebio
-2026-08-15;San Sebastián;277;2400;LL;12;SIRJAN;2;0;59;;R. Sousa
-2026-08-15;San Sebastián;277;2400;LL;12;SHACKLETON;3;0;59;;I. Melgarejo
-2026-08-15;San Sebastián;277;2400;LL;12;CHERGUI;8;0;59;;A. Werlé
-2026-08-15;San Sebastián;277;2400;LL;12;MASTER CATH;9;0;59;;Sr. Sarabia
+2026-08-15;San Sebastián;277;2400;A;12;SIRJAN;2;0;59;;R. Sousa
+2026-08-15;San Sebastián;277;2400;A;12;SHACKLETON;3;0;59;;I. Melgarejo
+2026-08-15;San Sebastián;277;2400;A;12;CHERGUI;8;0;59;;A. Werlé
+2026-08-15;San Sebastián;277;2400;A;12;MASTER CATH;9;0;59;;Sr. Sarabia
 2026-07-25;San Sebastián;225;2200;D;8;NAT IMPACT;3;-1;59.5;;B. Fayos
 2026-06-27;La Zarzuela;179;2500;LI;10;SIRJAN;2;0;58.5;;J. Gelabert
 2026-06-27;La Zarzuela;179;2500;LI;10;SHACKLETON;4;0;58.5;;S. Mazur
@@ -132,3 +133,77 @@ date;course;r;dist;cat;of;name;pos;g;kg;txt;j
 2025-12-23;La Zarzuela (arena);444;1700;D;;DANCELOT;1;;56;;V. Janacek
 2025-12-14;Dos Hermanas;435;1600;D;;DANCELOT;4;0;54;;V. Alonso V.
 2025-11-30;La Zarzuela;426;1600;C;;DANCELOT;8;2;57;;J. E. Leonardo
+2026-08-15;San Sebastián;;1500;D;;LADY COCODY;1;0;55.5;P. Alejandro Padilla;J. Gelabert
+2026-07-19;San Sebastián;;1600;D;;LADY COCODY;3;0;62;P. Hippodrome de Biarritz;D. Sikorová
+2026-06-11;San Sebastián;;1600;D;;LADY COCODY;6;0;62.5;P. Todoturf;R.N. Valle
+2026-05-15;La Zarzuela;;1600;D;;LADY COCODY;3;0;61.5;P. Hipódromo Alameda de Osuna;R.N. Valle
+2026-04-22;San Sebastián;;1600;D;;LADY COCODY;2;0;63;P. Electricidad Arregui;R.N. Valle
+2026-04-02;La Zarzuela;;1600;D;;LADY COCODY;5;0;62.5;P. Tribuna Norte;R.N. Valle
+2026-03-22;La Zarzuela;;1600;D;;LADY COCODY;2;0;63;P. Francisco Salas;R.N. Valle
+2026-02-01;Dos Hermanas;;1600;D;;LADY COCODY;2;2;56;P. Hipódromo de Donostia;N. De Julián
+2025-12-21;Dos Hermanas;;1600;D;;LADY COCODY;1;2;58.5;P. Brío de Navidad;R.N. Valle
+2025-12-07;Dos Hermanas;;1800;D;;LADY COCODY;4;0;57.5;P. Derechos Fundamentales;R.N. Valle
+2026-08-10;Sanlúcar (playa);;1800;D;;CUDILLERO;7;;57;P. Las Dunas Shopping;J. Gómez
+2026-06-18;La Zarzuela (arena);;1700;D;;CUDILLERO;3;;60;P. Cría Nacional - Gonzalo Ussía;V. Janáček
+2026-05-24;La Zarzuela;;1100;C;;CUDILLERO;5;0;58;P. Abrantes (recta);V. Janáček
+2026-05-01;La Zarzuela;;1400;D;;CUDILLERO;1;0;57;P. Duque de Osuna;V. Janáček
+2026-04-05;La Zarzuela;;1400;B;;CUDILLERO;5;0;56;P. Torre Arias;V. Janáček
+2026-03-29;La Zarzuela;;2100;C;;ZAMA;5;0;57;P. Manola;J. Gelabert
+2025-11-30;La Zarzuela;;1600;C;;ZAMA;4;2;57;P. Jesús Fernández Mur;V.M. Valenzuela
+2026-08-15;San Sebastián;;1500;D;;DIAS FELICES;6;0;60;P. Restaurante Aratz Erretegia;V. Janáček
+2026-08-09;San Sebastián;;1200;D;;DIAS FELICES;5;0;57;P. Araeta Sagardotegia;V. Janáček
+2026-07-05;San Sebastián;;1400;C;;DIAS FELICES;3;0;60;P. Donostia San Sebastián Turismo;J. Plateaux
+2026-05-31;La Zarzuela;;1200;D;;DIAS FELICES;5;0;61;P. Játiva (recta);R.N. Valle
+2026-05-15;La Zarzuela;;1600;D;;DIAS FELICES;2;0;58;P. Hipódromo Alameda de Osuna;S. Mazur
+2026-05-10;La Zarzuela;;1400;D;;DIAS FELICES;3;3;55;P. Eduardo Olgado;J. Gómez
+2026-04-19;La Zarzuela;;1500;D;;DIAS FELICES;5;0;56.5;P. Luis Manso Rocca;J. Gómez
+2026-04-02;La Zarzuela;;1600;D;;DIAS FELICES;3;0;58;P. Tribuna Norte;J. Gómez
+2026-03-15;La Zarzuela;;1500;C;;DIAS FELICES;11;0;52;P. Curva de las Perdices;C. Pérez
+2025-11-30;La Zarzuela;;1600;D;;DIAS FELICES;5;2;58;P. Marcos Carrasco;V. Alonso V.
+2026-07-30;La Zarzuela (arena);;2400;D;;ADHONOREM;4;;56;P. Raca;I. Melgarejo
+2026-07-23;La Zarzuela (arena);;1200;D;;ADHONOREM;7;;56;P. Rituss;I. Melgarejo
+2026-08-12;San Sebastián;;2000;D;;SWEET WISH;8;0;63;P. A Galopar;J. Gelabert
+2026-08-02;San Sebastián;;2000;D;;SWEET WISH;7;0;59;Copa Volvo 3ª etapa (amateurs);Srta. Mora-Figueroa
+2026-07-12;San Sebastián;;2000;D;;SWEET WISH;1;0;61;P. Aterpea;E.A. Rodríguez
+2026-06-25;La Zarzuela (arena);;1900;D;;SWEET WISH;4;;60.5;P. Rafael Figueroa (amateurs);Srta. Mora-Figueroa
+2026-04-16;San Sebastián;;2200;D;;SWEET WISH;5;2;61;P. Bar Patricio;E.A. Rodríguez
+2026-04-05;La Zarzuela;;2200;D;;SWEET WISH;8;0;61;P. Hermanos Bittini;E.A. Rodríguez
+2026-02-28;Dos Hermanas;;2200;D;;SWEET WISH;4;0;57.5;P. Turismo de la Provincia de Sevilla;I. Melgarejo
+2026-02-22;Dos Hermanas;;2100;D;;SWEET WISH;7;0;61;Copa Volvo 1ª etapa (amateurs);Sr. De Eusebio
+2026-01-25;Dos Hermanas;;2200;D;;SWEET WISH;5;2;59;P. Aceituna Manzanilla Sevillana;E.A. Rodríguez
+2026-01-11;Dos Hermanas;;2200;D;;SWEET WISH;2;0;56.5;P. Torre del Lanero;I. Melgarejo
+2025-12-28;Dos Hermanas;;2100;D;;SWEET WISH;1;2;58.5;P. Colores de Familias;E.A. Rodríguez
+2025-12-14;Dos Hermanas;;1800;D;;SWEET WISH;2;0;57.5;P. Periódico El Nazareno;E.A. Rodríguez
+2026-08-12;San Sebastián;;2800;D;;DON BOSCO;1;0;57;P. Zaldilasterketak.eus;J. Zambudio
+2026-07-16;La Zarzuela (arena);;2400;D;;DON BOSCO;4;;55;P. Cumbrales;J. Zambudio
+2026-06-25;La Zarzuela (arena);;2400;D;;DON BOSCO;4;;55.5;P. Isidoro Gómez;J. Zambudio
+2026-05-31;La Zarzuela;;2400;B;;KINDLEO;6;0;57;P. Rheffissimo;R.N. Valle
+2026-05-15;La Zarzuela;;2200;C;;KINDLEO;3;0;58;P. Bannaby;R.N. Valle
+2026-07-19;San Sebastián;;2200;C;;MASTER CATH;1;0;57;P. Garda Seguridad;R. Sousa
+2026-07-12;San Sebastián;;2000;D;;NAT IMPACT;1;0;57;P. Joyería Ayerdi;V. Seguy
+2026-06-14;La Zarzuela;;2400;D;;NAT IMPACT;6;0;60;P. Alberto Domper;I. Melgarejo
+2026-04-26;La Zarzuela;;2200;D;;NAT IMPACT;1;1;62;P. Revista Corta Cabeza;I. Melgarejo
+2025-11-30;La Zarzuela;;4000;B;;NAT IMPACT;6;2;59;P. Entre Copas - Gladiateur;V. Alonso V.
+2026-07-16;La Zarzuela (arena);;2400;D;;RONCAL;2;;58;P. Cumbrales;V. Janáček
+2026-05-15;La Zarzuela;;2200;C;;RONCAL;4;0;60;P. Bannaby;J. Gelabert
+2026-04-22;San Sebastián;;2200;D;;RONCAL;2;0;60;P. Arkupe Taberna;V. Janáček
+2026-05-31;La Zarzuela;;2400;B;;SHACKLETON;4;0;57;P. Rheffissimo;S. de Sousa
+2026-05-10;La Zarzuela;;3000;B;;SHACKLETON;2;3;57;P. Corpa;V. Janáček
+2026-05-10;La Zarzuela;;3000;B;;SIRJAN;1;3;59;P. Corpa;J. Gelabert
+2025-11-30;La Zarzuela;;4000;B;;HELIOPOLIS;2;2;57.5;P. Entre Copas - Gladiateur;I. Melgarejo
+2026-06-07;La Zarzuela;;2400;LL;;LIGHT L'AUDRIELLE;2;0;57;GP Villapadierna (Derby);R.N. Valle
+2026-05-10;La Zarzuela;;2200;B;;LIGHT L'AUDRIELLE;1;3;57;P. Velayos;R. Sousa
+2026-03-29;La Zarzuela;;2100;C;;LIGHT L'AUDRIELLE;3;0;61;P. Abonoteatro;R.N. Valle
+2026-07-19;San Sebastián;;2200;C;;LIGHT L'AUDRIELLE;2;0;59;P. Gipuzkoa Kirolak;R.N. Valle
+2026-08-15;San Sebastián;;1300;D;;REQUEJO LEGEND;2;0;56.5;P. Aktem;I. Melgarejo
+2026-07-19;San Sebastián;;1400;D;;MELLO MELLO;4;0;57;P. European Breeder's Fund;V. Janáček
+2026-08-08;Sanlúcar (playa);;1400;D;;NEVER EVER;1;;58;P. Memorial Jesús Ruiz Berlanga;J. Gelabert
+2026-07-16;La Zarzuela (arena);;1700;D;;NEVER EVER;9;;63;P. Familia García;J. Gelabert
+2026-07-05;San Sebastián;;1400;C;;NEVER EVER;10;0;62;P. Donostia San Sebastián Turismo;B. Fayos
+2026-06-07;La Zarzuela;;1400;D;;NEVER EVER;8;0;58;P. Francisco Jaquotot;V. Seguy
+2026-04-29;San Sebastián;;1600;D;;NEVER EVER;1;2;57;P. Arima Gastrotaberna;B. Fayos
+2026-07-25;San Sebastián;;1400;C;;SHINE SUN;4;-1;58;P. Alusaldu;D. Sikorová
+2026-02-15;Dos Hermanas;;1800;C;;DUKE OF CUMBERLAND;3;0;57;P. Memorial Javier Piñar Hafner;J. Gelabert
+2026-04-19;La Zarzuela;;2000;D;;AMAZONICO;8;0;57;P. Ercolini;R. Sousa
+2026-03-29;La Zarzuela;;2100;C;;AMAZONICO;4;0;56.5;P. Abonoteatro;V. Janáček
+2025-11-30;La Zarzuela;;1600;C;;LORD JINKS;4;2;57;P. Ceferino Carrasco;G. Trolley
