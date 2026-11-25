@@ -46,4 +46,4 @@ Para generar la página en local: `node train.js && python3 build.py`. Para ver 
 
 ## Aviso
 
-Es un modelo estadístico con una muestra pequeña. En la validación fuera de muestra (37 carreras) acierta el ganador en el 16 % de las carreras y apenas mejora al azar en pérdida logarítmica. No garantiza ningún beneficio: juega con responsabilidad.
+Es un modelo estadístico con una muestra pequeña. No garantiza ningún beneficio: juega con responsabilidad.
