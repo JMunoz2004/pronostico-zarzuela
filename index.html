@@ -119,6 +119,12 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 <div id="dHist"></div>
 </div></section>
 <section class="band" style="padding-top:0"><div class="wrap">
+<h2 class="cond" style="font-size:32px;margin:0 0 6px">Categorías</h2>
+<p class="small" style="margin:0 0 12px">Cuántas veces ha corrido cada caballo en cada categoría en el último año y en qué puesto (del más reciente al más antiguo). Ejemplo: «3 (2º, 3º, 6º)».</p>
+<div style="margin-bottom:10px"><label class="sel" for="cScope">De <select id="cScope"><option value="race">la carrera seleccionada</option><option value="all">todas las carreras del día</option></select></label></div>
+<div id="cats"></div>
+</div></section>
+<section class="band" style="padding-top:0"><div class="wrap">
 <h2 class="cond" style="font-size:32px;margin:0 0 6px">Pedigrí</h2>
 <p class="small" style="margin:0 0 12px">Padre, madre y abuelo materno de cada caballo de la carrera seleccionada, con sus ganancias. Fuente: fichas de A Galopar.</p>
 <div id="ped"></div>
@@ -539,7 +545,9 @@ const RACESX=RACES.map(r=>({...r,date:FECHA,rival:rivalCtx(GROUPS,r,FECHA),horse
 const RUNS_BY_H={}, RIDES_BY_J={};
 for(const g of GROUPS) for(const e of g.ent) if(g.date>=DESDE) (RUNS_BY_H[e.name]=RUNS_BY_H[e.name]||[]).push({date:g.date,course:g.course,dist:g.dist,cat:g.cat,g:g.g,of:g.of||null,pos:e.pos,out:e.out,kg:e.kg,j:e.j,jn:e.jn});
 for(const r of RACES) for(const h of r.horses){ const k=normName(h.name), L=RUNS_BY_H[k]=RUNS_BY_H[k]||[];
-  for(const m of (h.runs||[])) if(!isoOf(m.d)&&m.dist&&String(m.d)>=DESDE.slice(0,4)) L.push({date:null,dlabel:String(m.d),course:courseOf(m),dist:m.dist,cat:m.cat,g:m.g??null,of:m.of,pos:typeof m.pos==="number"?m.pos:parseInt(m.pos,10)||null,out:false,kg:m.kg}); }
+  for(const m of (h.runs||[])) if(!isoOf(m.d)&&m.dist&&String(m.d)>=DESDE.slice(0,4)&&!L.some(x=>x.date&&x.dist===m.dist&&x.pos===(typeof m.pos==="number"?m.pos:parseInt(m.pos,10)))) L.push({date:null,dlabel:String(m.d),course:courseOf(m),dist:m.dist,cat:m.cat,g:m.g??null,of:m.of,pos:typeof m.pos==="number"?m.pos:parseInt(m.pos,10)||null,out:false,kg:m.kg}); }
+const RUNS_YEAR={};
+for(const k in RUNS_BY_H){ RUNS_BY_H[k].sort((a,b)=>(b.date||b.dlabel||"")<(a.date||a.dlabel||"")?-1:1); RUNS_YEAR[k]=RUNS_BY_H[k].slice(); }
 for(const k in RUNS_BY_H) RUNS_BY_H[k]=RUNS_BY_H[k].sort((a,b)=>(b.date||b.dlabel||"")<(a.date||a.dlabel||"")?-1:1).slice(0,10); // último año, hasta 10 por caballo
 const JN={}; for(const r of RACES) for(const h of r.horses) JN[h.j]=h.jn.replace(/\s*\(.*\)$/,"");
 for(const r of TRAIN){ const date=isoOf(r.d); for(const h of r.h){ const i=r.arr.indexOf(h.no);
@@ -684,7 +692,22 @@ function ped(){ const r=RACESX.find(x=>x.n===S.cur), sc=scrSet(r.n); let tP=0,tM
 <tfoot><tr><td><b>Suma de la carrera</b> <span class="small">(sin retirados)</span></td><td></td><td class="n">${anyPM?eur(tP):"—"}</td><td></td><td class="n">${anyPM?eur(tM):"—"}</td><td class="n"><b>${anyPM?eur(tP+tM):"—"}</b></td><td class="n"><b>${eur(tC)}</b></td></tr></tfoot></table></div>
 <p class="small">Las fichas de A Galopar dan el padre, la madre y el abuelo materno, pero no las ganancias del padre ni de la madre (están en las fichas de ellos). Se añaden en <code>datos/carta.json</code> con <code>"ganPadre"</code> y <code>"ganMadre"</code> dentro de <code>"ag"</code>. «—» = sin dato; las ganancias de Asahi y Eolo no se ponen porque su ficha no está al día.</p>`;
 }
-function all(){tabs();race();sum();dhist();ped();}
+const CAT_COLS=[["LI","Listed int."],["LL","Listed local"],["A","Cat. A"],["B","Cat. B"],["C","Cat. C"],["D","Cat. D"],["EXT","Extranjero"],["NA","Sin categoría"]];
+function cats(){ const races=(S.cScope||"race")==="all"?RACESX:RACESX.filter(x=>x.n===S.cur);
+  document.getElementById("cScope").value=S.cScope||"race";
+  const ps=x=>x.pos!=null?x.pos+"º":x.out?"6º+":"?";
+  let body="";
+  for(const r of races){ const sc=scrSet(r.n);
+    if(races.length>1) body+=`<tr><td colspan="${CAT_COLS.length+2}" style="background:var(--soft)"><b>${r.n}ª carrera · ${esc(catShort(r.cat))} · ${r.dist.toLocaleString("es-ES")} m</b></td></tr>`;
+    for(const h of r.horses){ const L=(RUNS_YEAR[normName(h.name)]||[]); const by={};
+      for(const x of L){ const k=x.cat==="FR"||x.cat==="GB"?"EXT":x.cat&&CAT_INFO[x.cat]?x.cat:"NA"; (by[k]=by[k]||[]).push(x); }
+      const cell=k=>{ const a=by[k]; if(!a) return `<td class="n" style="color:var(--mut)">—</td>`; const w=a.filter(x=>x.pos===1).length;
+        return `<td class="n" style="white-space:nowrap"><b>${a.length}</b> (${a.map(x=>x.pos===1?`<b>${ps(x)}</b>`:ps(x)).join(", ")})</td>`; };
+      body+=`<tr${sc.has(h.no)?' style="opacity:.45"':""}><td class="hn2">${cloth(h.no)} <span class="hn">${esc(h.name)}</span></td>${CAT_COLS.map(([k])=>cell(k)).join("")}<td class="n">${L.length}</td></tr>`; } }
+  document.getElementById("cats").innerHTML=`<div class="scroll dh"><table><thead><tr><th>Caballo</th>${CAT_COLS.map(([,l])=>`<th class="n">${l}</th>`).join("")}<th class="n">Total</th></tr></thead><tbody>${body}</tbody></table></div>
+<p class="small">Último año (desde el ${DESDE_DM}), con todas las carreras conocidas: jornadas de La Zarzuela, fichas y revista de A Galopar e historial del extranjero. Victorias en negrita. «6º+»: llegó fuera de los 5 primeros y no consta el puesto exacto. La categoría de hoy sale en la pestaña de cada carrera.</p>`;
+}
+function all(){tabs();race();sum();dhist();cats();ped();}
 document.getElementById("base").value=S.base;
 document.addEventListener("click",e=>{ if(e.target.id==="dAny"){ S.dr={...dRange(),min:800,max:5000,auto:false}; save(); dhist(); return; } if(e.target.id==="dReset"){ S.dr={...dRange(),auto:true}; save(); dhist(); return; } const t=e.target.closest(".tab"); if(t){S.cur=+t.dataset.n; open.clear(); save(); all(); return;}
   const s=e.target.closest("[data-scr]"); if(s){const n=S.cur, no=+s.dataset.scr, set=scrSet(n); set.has(no)?set.delete(no):set.add(no); S.scr[n]=[...set]; save(); tabs(); race(); sum(); document.querySelector(`[data-scr="${no}"]`)?.focus(); return;}
@@ -703,6 +726,7 @@ document.addEventListener("input",e=>{const el=e.target;
   if(el.id==="bank"){const v=parseFloat(el.value); if(v>0){S.bank=v; save();} return;}
   if(el.id==="dayW"){S.dayW=+el.value/100; el.nextElementSibling.textContent=el.value; save(); cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{race(); sum(); document.getElementById("dayW")?.focus();}); return;}});
 document.addEventListener("change",e=>{const el=e.target, n=S.cur;
+  if(el.id==="cScope"){ S.cScope=el.value; save(); cats(); return; }
   if(el.id==="dTerr"){ S.dTerr=el.value; save(); dhist(); return; }
   if(el.id==="dScope"){ S.dr={...dRange(),scope:el.value}; save(); dhist(); return; }
   if(el.id==="base"){S.base=el.value; save(); all(); return;}
