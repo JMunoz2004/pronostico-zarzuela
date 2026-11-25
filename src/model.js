@@ -3,7 +3,13 @@
 // probabilidad de ganar sale de un softmax con "temperatura" T. Pesos y T se entrenan con las jornadas anteriores.
 const FPTS = {1:1,2:.72,3:.55,4:.42,5:.33,6:.25,7:.18,8:.13,9:.1};
 function posPts(p){ const s=String(p).trim(); if(/^(NP|P|C|Qdo|Ddo|Dto|Desc|TBE)$/i.test(s)) return .05; const n=parseInt(s,10); if(isNaN(n)) return .1; return FPTS[n] ?? .06; }
-const CAT = {A:4,FR:3,B:3,C:2,D:1};
+// Categorías españolas por importe del primer premio: Listed internacional ≥ 50.000 €, Listed local 35.000–49.999,
+// A 24.000–34.999, B 15.000–23.999, C 8.000–14.999, D 3.500–7.999. FR = carrera en Francia (sin categoría española).
+const CAT = {LI:6,LL:5,A:4,FR:3,B:3,C:2,D:1};
+const CAT_INFO = {LI:["Listed internacional","1er premio ≥ 50.000 €"],LL:["Listed local","1er premio 35.000–49.999 €"],A:["Categoría A","1er premio 24.000–34.999 €"],
+  B:["Categoría B","1er premio 15.000–23.999 €"],C:["Categoría C","1er premio 8.000–14.999 €"],D:["Categoría D","1er premio 3.500–7.999 €"],FR:["Francia","sin categoría española"]};
+const catName=c=>c&&CAT_INFO[c]?CAT_INFO[c][0]:"categoría desconocida";
+const catShort=c=>c==="LI"?"Listed int.":c==="LL"?"Listed local":c==="FR"?"Francia":c?"Cat. "+c:"cat. ?";
 const TERR_NAMES = ["Bueno","Bueno a blando","Blando","Pesado"];
 const BASE_T = {bueno:0,bb:1,blando:2,pesado:3};
 const CIELO = {
@@ -92,7 +98,10 @@ function meetingGroups(train, extra, card){
     const g=get(`${date}|La Zarzuela|${r.r}`,{date,course:"La Zarzuela",dist:r.dist,cat:r.cat,g:gg??null,of:r.h.length});
     for(const h of r.h){ const i=r.arr.indexOf(h.no); g.ent.push({name:normName(h.name),disp:h.name,pos:i>=0?i+1:null,out:i<0,kg:h.kg,draw:h.draw,j:h.j}); } }
   const addRun=(name,x)=>{ if(!x.date||/^(NP|TBE)$/i.test(String(x.pos))) return; const lz=/Zarzuela/.test(x.course||"");
-    if(lz&&trainDates.has(x.date)) return; // esa jornada ya está entera en los datos
+    if(lz&&trainDates.has(x.date)){ // esa jornada ya está entera: solo se aprovecha el puesto exacto si allí figuraba como «6º o peor»
+      const p=parseInt(String(x.pos),10), n=normName(name);
+      if(!isNaN(p)) for(const k in G){ if(!k.startsWith(x.date+"|La Zarzuela|")) continue; const e=G[k].ent.find(e=>e.name===n); if(e&&e.pos==null) { e.pos=p; e.out=false; } }
+      return; }
     const n=normName(name); if(seenHD.has(n+"|"+x.date)) return; seenHD.add(n+"|"+x.date); // un caballo no corre dos veces el mismo día
     const key=`${x.date}|${x.course}|${x.r||x.dist}`;
     const g=get(key,{date:x.date,course:x.course,dist:x.dist,cat:x.cat,g:x.g??(lz?GOING_BY_DATE[x.date]:null)??null,of:x.of});
@@ -123,7 +132,7 @@ function btFit(groups, asOf, dist){
 function h2h(groups, name, others, asOf){
   const me=normName(name), set=new Set(others.map(normName)), out=[];
   for(const g of groups){ if(g.date>=asOf) continue; const a=g.ent.find(e=>e.name===me); if(!a) continue;
-    for(const b of g.ent){ if(b===a||!set.has(b.name)) continue; out.push({date:g.date,course:g.course,dist:g.dist,g:g.g,of:g.of,me:a,rv:b,res:ahead(a,b)}); } }
+    for(const b of g.ent){ if(b===a||!set.has(b.name)) continue; out.push({date:g.date,course:g.course,dist:g.dist,cat:g.cat,g:g.g,of:g.of,me:a,rv:b,res:ahead(a,b)}); } }
   return out.sort((x,y)=>x.date<y.date?1:-1);
 }
 function rivalCtx(groups, race, asOf){ return {bt:btFit(groups,asOf,race.dist),groups,asOf}; }
@@ -187,7 +196,7 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
       if(ctx&&ctx.biasN&&race.dist<=2000) bias=(dayW||0)*ctx.bias*ctx.biasN/(ctx.biasN+6)*1.2;
       f.cajon=Math.max(.05,Math.min(.95,.5+(rel-.5)*(dStr*cajonM+bias))); why.cajon=`cajón ${h.draw} de ${N}`+(ctx&&ctx.biasN&&race.dist<=2000?` · hoy los 3 primeros salieron ${ctx.bias>.05?"más por dentro":ctx.bias<-.05?"más por fuera":"repartidos"}`:""); }
     if(runs.length){ const last=runs[0]; const dc=(CAT[last.cat]||2)-(CAT[race.cat]||2); f.clase=Math.max(.1,Math.min(.9,.5+.12*dc));
-      why.clase=dc>0?`baja de categoría (${last.cat==="FR"?"Francia":last.cat} → ${race.cat})`:dc<0?`sube de categoría (${last.cat} → ${race.cat})`:`misma categoría (${race.cat})`; }
+      why.clase=(dc>0?"baja de categoría":dc<0?"sube de categoría":"misma categoría")+` (última: ${catShort(last.cat)} → hoy: ${catShort(race.cat)})`; }
     else { f.clase=.5; why.clase="sin referencia"; }
     { const hh=h.hist||[], gr=[...hh,...(h.runs||[]).filter(r=>!hh.some(x=>x.d===r.d))].filter(r=>r.g!=null);
       if(gr.length){ let s=0; for(const r of gr) s+=(posPts(r.pos)-.35)*(r.g/3); s/=gr.length;
@@ -318,4 +327,4 @@ function evalRaces(prepared,W,T){
     hit+=gt===0?1/eq:0; t3+=Math.max(0,Math.min(eq,3-gt))/eq; n++; }
   return {n,ll:ll/n,llU:llU/n,hit:hit/n,t3:t3/n};
 }
-if (typeof module!=="undefined") module.exports={setGoing,meetingGroups,btFit,h2h,rivalCtx,ahead,setRefDate,getWin,buildHist,runPts,isoOf,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};
+if (typeof module!=="undefined") module.exports={CAT_INFO,catName,catShort,setGoing,meetingGroups,btFit,h2h,rivalCtx,ahead,setRefDate,getWin,buildHist,runPts,isoOf,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};

@@ -24,7 +24,19 @@ Cabecera:
 | `prevision` | `"Previsión al 03/12: lluvia, 6–11 °C"` | opcional, sale arriba |
 | `visitantes` | `{"PASQUIER":0.75}` | valor previo (0–1) para jinetes sin montas en los datos |
 
-Cada carrera: `n`, `name`, `sub`, `dist`, `cat` (A/B/C/D), `hora`, `premio` y `horses`.
+Cada carrera: `n`, `name`, `sub`, `dist`, `cat`, `hora`, `premio` y `horses`.
+
+Categorías (`cat`, también en las jornadas y en `otras-carreras.csv`), por importe del primer premio:
+
+| código | categoría | 1er premio |
+|---|---|---|
+| `LI` | Listed internacional | 50.000 € o más |
+| `LL` | Listed local | 35.000–49.999 € |
+| `A` | A | 24.000–34.999 € |
+| `B` | B | 15.000–23.999 € |
+| `C` | C | 8.000–14.999 € |
+| `D` | D | 3.500–7.999 € |
+| `FR` | carrera en Francia | — |
 
 Cada caballo, una línea:
 
