@@ -22,6 +22,7 @@ App de Streamlit (y página autocontenida `index.html`) que pronostica las carre
 - **Bajas de última hora:** pulsas el caballo y se recalcula todo sin él.
 - **Gemelas y tríos** por simulación (20.000 carreras simuladas por carrera, teniendo en cuenta la regularidad de cada caballo).
 - **Apuesta de valor / arriesgada:** con las cuotas de la casa, mezcla mercado y modelo, calcula el valor esperado y propone ¼ de Kelly.
+- **Combinada de 3 y 4 carreras seguidas (sucesos dependientes):** árbol exacto de ganadores; para cada ganador posible de una carrera se recalcula la siguiente con ese resultado ya corrido (victoria del día para su jinete y preparador, sesgo de cajón y estadística de temporada). Da las combinaciones más probables, su cuota justa, la diferencia con suponerlas independientes y la mejor jugada para un máximo de combinaciones.
 - **Lo que va de día:** las llegadas de la mañana se suman a la estadística de jinetes y preparadores para las carreras de la tarde.
 
 Lo que introduces (bajas, tiempo, cuotas, llegadas) se guarda en tu navegador.

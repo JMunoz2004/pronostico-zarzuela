@@ -107,6 +107,17 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 <div class="sum" id="sum"></div>
 </div></section>
 <section class="band" style="padding-top:0"><div class="wrap">
+<h2 class="cond" style="font-size:32px;margin:0 0 6px">Combinada de 3 y 4 carreras seguidas</h2>
+<p class="small" style="margin:0 0 12px">Elige el ganador de varias carreras seguidas teniendo en cuenta que <b>no son independientes</b>: si en una carrera gana un caballo, su jinete y su preparador suman esa victoria en el día y su cajón cuenta para el sesgo de pista, y eso cambia las probabilidades de la carrera siguiente. Se calculan todas las combinaciones de ganadores, una a una, con esa dependencia. Las carreras con llegada ya escrita se toman como corridas.</p>
+<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+<label class="sel" for="pkStart">Desde la <select id="pkStart"></select></label>
+<label class="sel" for="pkDep" style="min-width:300px">Dependencia entre carreras <input type="range" id="pkDep" min="0" max="100" step="5" style="width:140px"> <span class="n" id="pkDepV"></span></label>
+<label class="sel" for="pkMax">Máx. combinaciones a jugar <input type="number" id="pkMax" min="1" max="200" step="1" style="width:90px"></label>
+<button class="btn" id="pkGo">Calcular</button>
+</div>
+<div id="pick"><p class="small">Pulsa «Calcular» (tarda uno o dos segundos).</p></div>
+</div></section>
+<section class="band" style="padding-top:0"><div class="wrap">
 <h2 class="cond" style="font-size:32px;margin:0 0 6px">Carreras anteriores por distancia y terreno</h2>
 <p class="small" style="margin:0 0 12px">Elige un rango de distancias y/o un terreno y verás quién ha corrido así, cómo quedó y con cuántos kilos; y lo mismo para los jinetes que montan hoy.</p>
 <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
@@ -718,6 +729,53 @@ function ped(){ const r=RACESX.find(x=>x.n===S.cur), sc=scrSet(r.n); let tP=0,tM
 <tfoot><tr><td><b>Suma de la carrera</b> <span class="small">(sin retirados)</span></td><td></td><td class="n">${anyPM?eur(tP):"—"}</td><td></td><td class="n">${anyPM?eur(tM):"—"}</td><td class="n"><b>${anyPM?eur(tP+tM):"—"}</b></td><td class="n"><b>${eur(tC)}</b></td></tr></tfoot></table></div>
 <p class="small">Las fichas de A Galopar dan el padre, la madre y el abuelo materno, pero no las ganancias del padre ni de la madre (están en las fichas de ellos). Se añaden en <code>datos/carta.json</code> con <code>"ganPadre"</code> y <code>"ganMadre"</code> dentro de <code>"ag"</code>. «—» = sin dato; las ganancias de Asahi y Eolo no se ponen porque su ficha no está al día.</p>`;
 }
+// ---------- Combinada con carreras dependientes ----------
+// Árbol exacto de ganadores: para cada ganador posible de una carrera se recalcula la siguiente con ese resultado como «ya corrido»
+// (estadística del día de su jinete y preparador, sesgo de cajón y estadística de temporada). Con cuotas escritas se usa la
+// probabilidad mezclada con el mercado, como en el resto de la página.
+function probsGiven(r,res,dw){ const today=todayAsTrain(RACESX,res,S.scr,r.n); const st=today.length?buildStats(TRAIN.concat(today)):STATS;
+  const ctx=dayContext(RACESX,res,S.scr,r.n); const out=scoreRace(r,st,S.w,tOf(r.n),VISITORS,scrSet(r.n),S.T,ctx,dw);
+  const b=blendProbs(out,oddsOf(r.n)); return out.map((o,i)=>({no:o.h.no,p:b?b.pc[i]:o.p})); }
+function chain(seq,dw){ const leaves=[]; let calls=0;
+  const rec=(i,res,p,ws)=>{ if(i===seq.length){ leaves.push({w:ws,p}); return; } const r=seq[i]; const P=probsGiven(r,res,dw); calls++;
+    for(const {no,p:q} of P){ const pq=p*q; if(pq<2e-6) continue; rec(i+1,{...res,[r.n]:[no]},pq,[...ws,no]); } };
+  rec(0,{...S.res},1,[]); const tot=leaves.reduce((a,l)=>a+l.p,0)||1; leaves.forEach(l=>l.p/=tot); return {leaves,calls}; }
+let PK=null;
+function pickCalc(){ const start=+(S.pkStart||RACESX.find(r=>!S.res[r.n])?.n||1), dw=(S.pkDep??50)/100, maxC=S.pkMax||12;
+  const seq4=RACESX.filter(r=>r.n>=start&&!(S.res[r.n]&&S.res[r.n].length)).slice(0,4);
+  if(seq4.length<3){ document.getElementById("pick").innerHTML=`<p class="small">Quedan menos de 3 carreras sin llegada desde la ${start}ª.</p>`; return; }
+  const t0=performance.now(), C4=seq4.length>=4?chain(seq4,dw):null, C3=chain(seq4.slice(0,3),dw);
+  const base=seq4.map(r=>Object.fromEntries(probsGiven(r,{...S.res},0).map(x=>[x.no,x.p])));
+  PK={seq4,C3,C4,base,dw,maxC,ms:performance.now()-t0}; pickRender(); }
+function pickRender(){ if(!PK) return; const {seq4,C3,C4,base,dw,maxC,ms}=PK;
+  const hn=(r,no)=>{ const h=r.horses.find(x=>x.no===no); return `${cloth(no)} ${esc(h?h.name.replace(/ \(.*\)/,""):"?")}`; };
+  const block=(C,k)=>{ const seq=seq4.slice(0,k), L=[...C.leaves].sort((a,b)=>b.p-a.p);
+    // marginales con dependencia frente a las de cada carrera por separado
+    const marg=seq.map((r,i)=>{ const m={}; for(const l of L) m[l.w[i]]=(m[l.w[i]]||0)+l.p; return m; });
+    const top=L.slice(0,10).map(l=>{ const ind=l.w.reduce((a,no,i)=>a*(base[i][no]||0),1);
+      return `<tr><td>${l.w.map((no,i)=>hn(seq[i],no)).join(" → ")}</td><td class="n">${pct(l.p)}</td><td class="n">${dec(1/l.p)}</td><td class="n">${pct(ind)}</td><td class="n">${ind>0?(l.p/ind>=1?"+":"−")+Math.abs((l.p/ind-1)*100).toFixed(0)+" %":"—"}</td></tr>`; }).join("");
+    // selección: se prueban todos los repartos (cuántos de los más probables en cada carrera) con nº de combinaciones ≤ máximo
+    // y se elige el que más probabilidad cubre
+    const ord=marg.map(m=>Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([no])=>+no));
+    let bestK=null, bestC=-1; const ks=new Array(seq.length).fill(1);
+    const covOf=K=>{ const S2=K.map((k,i)=>new Set(ord[i].slice(0,k))); return L.reduce((a,l)=>a+(l.w.every((no,i)=>S2[i].has(no))?l.p:0),0); };
+    const walk=(i,prod)=>{ if(i===seq.length){ const c=covOf(ks); if(c>bestC+1e-12){ bestC=c; bestK=ks.slice(); } return; }
+      for(let k=1;k<=ord[i].length&&prod*k<=maxC;k++){ ks[i]=k; walk(i+1,prod*k); } ks[i]=1; };
+    walk(0,1);
+    const sel=bestK.map((k,i)=>ord[i].slice(0,k)), cover=()=>bestC, ncomb=()=>sel.reduce((a,s)=>a*s.length,1);
+    const cov=cover(), nc=ncomb();
+    const mt=seq.map((r,i)=>{ const e=Object.entries(marg[i]).sort((a,b)=>b[1]-a[1]).slice(0,4);
+      return `<tr><td><b>${r.n}ª</b> · ${r.hora} · ${r.dist.toLocaleString("es-ES")} m</td><td>${e.map(([no,p])=>`${hn(r,+no)} ${pct(p)} <span class="small">(sola: ${pct(base[i][no]||0)})</span>`).join("<br>")}</td><td>${sel[i].map(no=>hn(r,no)).join("<br>")}</td></tr>`; }).join("");
+    return `<h3>${k} carreras: ${seq.map(r=>r.n+"ª").join(" · ")}</h3>
+<div class="scroll dh"><table><thead><tr><th>Carrera</th><th>Más probables con dependencia <span class="small">(entre paréntesis, mirando la carrera sola)</span></th><th>Para jugar</th></tr></thead><tbody>${mt}</tbody></table></div>
+<p><b>Jugada sugerida:</b> ${sel.map((s,i)=>`${seq[i].n}ª: ${s.join("-")}`).join(" · ")} → <b>${nc} combinaciones</b>, cubre el <b>${pct(cov)}</b> de las probabilidades (si apuestas lo mismo a cada una, compensa si el dividendo de la combinada supera ~${dec(nc/cov)} veces lo apostado por combinación).</p>
+<div class="scroll dh"><table><thead><tr><th>Combinación más probable</th><th class="n">Prob.</th><th class="n">Cuota justa</th><th class="n">Si fueran independientes</th><th class="n">Diferencia</th></tr></thead><tbody>${top}</tbody></table></div>`; };
+  document.getElementById("pick").innerHTML=`<div class="dh">${block(PK.C3,3)}${PK.C4?block(PK.C4,4):""}</div>
+<p class="small">Dependencia al ${Math.round(dw*100)} %: a 0 % solo cuenta que la victoria se suma a la estadística de temporada del jinete y del preparador; a 100 % además pesa del todo la racha del día y el sesgo de cajón. En la prueba con las jornadas de otoño, dar peso a la racha del día no mejoró la predicción, así que no conviene subirlo mucho. Calculado en ${Math.round(ms)} ms con ${PK.C3.calls+(PK.C4?PK.C4.calls:0)} recálculos de carrera.</p>`; }
+function pickCtl(){ const s=document.getElementById("pkStart"), rem=RACESX.filter(r=>!(S.res[r.n]&&S.res[r.n].length));
+  s.innerHTML=RACESX.filter(r=>RACESX.filter(x=>x.n>=r.n&&!(S.res[x.n]&&S.res[x.n].length)).length>=3).map(r=>`<option value="${r.n}">${r.n}ª carrera</option>`).join("");
+  const def=rem[0]?.n; if(S.pkStart&&[...s.options].some(o=>+o.value===+S.pkStart)) s.value=S.pkStart; else if(def) s.value=def;
+  document.getElementById("pkDep").value=S.pkDep??50; document.getElementById("pkDepV").textContent=(S.pkDep??50)+" %"; document.getElementById("pkMax").value=S.pkMax||12; }
 const CAT_COLS=[["LI","Listed int."],["LL","Listed local"],["A","Cat. A"],["B","Cat. B"],["C","Cat. C"],["D","Cat. D"],["EXT","Extranjero"],["NA","Sin categoría"]];
 function cats(){ const races=(S.cScope||"race")==="all"?RACESX:RACESX.filter(x=>x.n===S.cur);
   document.getElementById("cScope").value=S.cScope||"race";
@@ -733,9 +791,9 @@ function cats(){ const races=(S.cScope||"race")==="all"?RACESX:RACESX.filter(x=>
   document.getElementById("cats").innerHTML=`<div class="scroll dh"><table><thead><tr><th>Caballo</th>${CAT_COLS.map(([,l])=>`<th class="n">${l}</th>`).join("")}<th class="n">Total</th></tr></thead><tbody>${body}</tbody></table></div>
 <p class="small">Último año (desde el ${DESDE_DM}), con todas las carreras conocidas: jornadas de La Zarzuela, fichas y revista de A Galopar e historial del extranjero. Victorias en negrita. «6º+»: llegó fuera de los 5 primeros y no consta el puesto exacto. La categoría de hoy sale en la pestaña de cada carrera.</p>`;
 }
-function all(){tabs();race();sum();dhist();cats();ped();}
+function all(){tabs();race();sum();pickCtl();dhist();cats();ped(); if(PK){ PK=null; document.getElementById("pick").innerHTML=`<p class="small">Algo ha cambiado (bajas, llegadas, tiempo o pesos): pulsa «Calcular» de nuevo.</p>`; } }
 document.getElementById("base").value=S.base;
-document.addEventListener("click",e=>{ if(e.target.id==="dAny"){ S.dr={...dRange(),min:800,max:5000,auto:false}; save(); dhist(); return; } if(e.target.id==="dReset"){ S.dr={...dRange(),auto:true}; save(); dhist(); return; } const t=e.target.closest(".tab"); if(t){S.cur=+t.dataset.n; open.clear(); save(); all(); return;}
+document.addEventListener("click",e=>{ if(e.target.id==="pkGo"){ e.target.textContent="Calculando…"; setTimeout(()=>{ pickCalc(); e.target.textContent="Calcular"; },30); return; } if(e.target.id==="dAny"){ S.dr={...dRange(),min:800,max:5000,auto:false}; save(); dhist(); return; } if(e.target.id==="dReset"){ S.dr={...dRange(),auto:true}; save(); dhist(); return; } const t=e.target.closest(".tab"); if(t){S.cur=+t.dataset.n; open.clear(); save(); all(); return;}
   const s=e.target.closest("[data-scr]"); if(s){const n=S.cur, no=+s.dataset.scr, set=scrSet(n); set.has(no)?set.delete(no):set.add(no); S.scr[n]=[...set]; save(); tabs(); race(); sum(); document.querySelector(`[data-scr="${no}"]`)?.focus(); return;}
   if(e.target.closest("input,select")) return;
   const r=e.target.closest("tr.row"); if(r){const n=+r.dataset.no; open.has(n)?open.delete(n):open.add(n); race(); document.querySelector(`tr.row[data-no="${n}"]`)?.focus(); return;}
@@ -746,12 +804,15 @@ document.addEventListener("keydown",e=>{const r=e.target.closest&&e.target.close
   const t=e.target.closest&&e.target.closest(".tab"); if(t&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){{const NR=RACESX.length; S.cur=((S.cur-1+(e.key==="ArrowRight"?1:NR-1))%NR)+1;} open.clear(); save(); all(); document.getElementById("t"+S.cur).focus();}});
 let raf=0;
 document.addEventListener("input",e=>{const el=e.target;
+  if(el.id==="pkDep"){ S.pkDep=+el.value; document.getElementById("pkDepV").textContent=el.value+" %"; save(); return; }
+  if(el.id==="pkMax"){ const v=parseInt(el.value,10); if(v>0){ S.pkMax=v; save(); if(PK){ PK.maxC=v; pickRender(); } } return; }
   if(el.id==="dMin"||el.id==="dMax"){ const v=parseInt(el.value,10); if(!(v>=400&&v<=6000)) return; const D=dRange(); S.dr={...D,auto:false,[el.id==="dMin"?"min":"max"]:v}; save(); clearTimeout(window.__dt); window.__dt=setTimeout(dhist,250); return; }
   if(el.dataset&&el.dataset.k){S.w[el.dataset.k]=+el.value; S.preset="custom"; el.nextElementSibling.textContent=el.value; save(); const id=el.id;
     cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{race(); sum(); document.getElementById(id)?.focus();}); return;}
   if(el.id==="bank"){const v=parseFloat(el.value); if(v>0){S.bank=v; save();} return;}
   if(el.id==="dayW"){S.dayW=+el.value/100; el.nextElementSibling.textContent=el.value; save(); cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{race(); sum(); document.getElementById("dayW")?.focus();}); return;}});
 document.addEventListener("change",e=>{const el=e.target, n=S.cur;
+  if(el.id==="pkStart"){ S.pkStart=+el.value; save(); return; }
   if(el.id==="cScope"){ S.cScope=el.value; save(); cats(); return; }
   if(el.id==="dTerr"){ S.dTerr=el.value; save(); dhist(); return; }
   if(el.id==="dScope"){ S.dr={...dRange(),scope:el.value}; save(); dhist(); return; }
