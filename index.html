@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pronóstico La Zarzuela 29/11</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: programa de mano del hipódromo, preciso y sobrio, como la sección de turf de un buen diario.
+   IDEA: la pista de hierba; cada caballo es una mantilla que avanza según su probabilidad.
+   PICTURE: calles de césped por carrera con mantillas numeradas y poste de meta.
+   COLOUR and TYPE: verde hierba profundo, blanco de la valla, rojo de mantilla como acento; Barlow Condensed + Barlow.
+   LAYOUT: cabecera, pestañas de carreras, panel "en directo" (tiempo, bajas), pista, tabla con cuotas, apuestas, resumen, validación. */
+:root{color-scheme:light dark;--bg:light-dark(#f6f8f5,#0d1712);--ink:light-dark(#12201a,#e8efe9);--mut:light-dark(#4f6158,#9fb2a7);
+--turf:light-dark(#2f7a4a,#24613b);--turf2:light-dark(#3a8a56,#2b6e44);--deep:light-dark(#163d28,#0a2416);--card:light-dark(#ffffff,#13221a);
+--line:light-dark(#d7e0da,#25382d);--soft:light-dark(#eef3ef,#17291f);--acc:#d7262e;--rail:#ffffff}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3,.cond{font-family:"Barlow Condensed",Barlow,sans-serif;font-weight:700;letter-spacing:.01em}
+.band{padding:clamp(22px,4vw,52px) max(5vw,16px)}.wrap{max-width:1240px;margin:0 auto}
+header{background:var(--deep);color:#f2f7f3;position:relative}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:10px;background:repeating-linear-gradient(90deg,#fff 0 34px,#e9efe9 34px 38px)}
+header h1{font-size:clamp(30px,5vw,50px);line-height:1.05;margin:0 0 8px;text-wrap:balance}
+header p{margin:0;color:#c9dccf;max-width:70ch}
+.meta{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:16px;align-items:center}.meta span{white-space:nowrap}
+select,button,input{font:inherit;font-size:16px}
+select,input[type=number]{min-height:44px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+header select{background:#0f2d1d;color:#fff;border-color:#6d8f7a}
+label.sel{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:14px max(5vw,16px);background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.tab{flex:none;min-height:48px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;text-align:left;line-height:1.15}
+.tab b{font-family:"Barlow Condensed";font-size:19px;display:block}.tab small{color:var(--mut);font-size:13px}
+.tab[aria-selected=true]{background:var(--turf);border-color:var(--turf);color:#fff}.tab[aria-selected=true] small{color:#d9efe0}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.rhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;align-items:end;margin-bottom:14px}
+.rhead h2{font-size:clamp(28px,3.6vw,40px);margin:0;line-height:1.05}.sub{color:var(--mut)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px;white-space:nowrap;font-size:15px}
+.chip.hot{background:var(--acc);border-color:var(--acc);color:#fff}
+.live{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
+@media(max-width:760px){.live{grid-template-columns:minmax(0,1fr)}}
+.live h3{margin:0 0 8px;font-size:20px}.hrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.scr{min-height:40px;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;display:flex;gap:6px;align-items:center;font-size:15px}
+.scr[aria-pressed=true]{background:var(--soft);text-decoration:line-through;color:var(--mut)}
+.track{background:linear-gradient(var(--turf),var(--turf2));border-radius:14px;padding:10px 14px;box-shadow:inset 0 -6px 0 rgba(0,0,0,.15)}
+.tlab{display:flex;justify-content:space-between;color:#d9efe0;font-size:13px;margin:0 0 4px}
+.lane{display:grid;grid-template-columns:clamp(110px,22%,210px) minmax(0,1fr);align-items:center;height:38px;border-bottom:1px dashed rgba(255,255,255,.28)}
+.lane:last-child{border-bottom:0}.lane.out{opacity:.45}
+.lname{color:#fff;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:10px}
+.run{position:relative;height:100%;border-right:4px solid var(--rail)}
+.bar{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;justify-content:flex-end;transition:width .6s ease;min-width:30px}
+.bar i{position:absolute;left:0;right:30px;top:50%;height:4px;background:rgba(255,255,255,.45);border-radius:2px}
+.cloth{width:30px;height:28px;border-radius:5px;display:grid;place-items:center;font:700 16px "Barlow Condensed";box-shadow:0 2px 0 rgba(0,0,0,.3);position:relative;z-index:1;flex:none}
+.lpct{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);color:#fff;font:600 16px "Barlow Condensed";white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.bar{transition:none}}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;margin-top:22px}
+.sls{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:0 24px}
+td.fm{white-space:nowrap;font-variant-numeric:tabular-nums;font-size:14px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font:600 14px Barlow;color:var(--mut);background:var(--soft)}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.row{cursor:pointer}tr.row:hover{background:var(--soft)}
+.hn{font-weight:600}.small{font-size:13px;color:var(--mut)}
+.odd{width:76px;min-height:40px;text-align:right}
+.ev{font-weight:600}.ev.pos{color:light-dark(#1d7a3e,#7fd59c)}.ev.neg{color:var(--mut)}
+.det td{background:light-dark(#f8faf8,#0f1c15);padding:12px 14px}
+.fac{display:grid;grid-template-columns:96px minmax(0,1fr) 40px;gap:6px 10px;align-items:center;font-size:14px}
+.fbar{height:10px;border-radius:5px;background:var(--line);position:relative;overflow:hidden}.fbar span{position:absolute;top:0;bottom:0}
+.why{grid-column:2/4;color:var(--mut);font-size:13px;margin-top:-4px}
+.runs{margin:10px 0 0;padding-left:18px;font-size:14px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.box h3{margin:0 0 6px;font-size:22px}
+.sl{display:grid;grid-template-columns:90px minmax(0,1fr) 30px;gap:8px;align-items:center;margin:4px 0}
+input[type=range]{width:100%;min-height:40px;accent-color:var(--turf)}
+.btn{min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.bets{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin-top:22px}
+.bet{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.bet.risk{border:2px solid var(--acc)}
+.bet h3{margin:0 0 4px;font-size:21px}.bet .k{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.bet ol{margin:6px 0 0;padding-left:20px}.bet li{margin:4px 0}
+.big{font:700 26px "Barlow Condensed"}
+.sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.scard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.scard h3{margin:0;font-size:20px}.pick{display:flex;gap:10px;align-items:center;margin-top:8px}
+.note{border-left:4px solid var(--acc);padding:4px 0 4px 14px;color:var(--mut);max-width:80ch}
+.prose{max-width:80ch}.prose h2{font-size:30px;margin:0 0 10px}.prose li{margin:4px 0}
+a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
+@media(max-width:640px){table{font-size:13px}.stack thead{display:none}.stack tr.row{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 10px;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mut)}.stack td:empty{display:none}.stack .det{display:block}.stack .det td{padding-inline-start:12px;display:block}.stack .det td::before{display:none}.lname{font-size:13px}.fac{grid-template-columns:80px minmax(0,1fr) 36px}}
+</style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack tr.row td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head><body>
+<header class="band"><div class="wrap">
+<h1>La Zarzuela, domingo 29 de noviembre: pronóstico en directo</h1>
+<p>Modelo con los participantes definitivos y su historial en España y Francia. El domingo, en cada carrera, indica el tiempo que hace, marca las bajas de última hora y escribe las cuotas: el pronóstico, las gemelas, los tríos y la apuesta de valor se recalculan al momento.</p>
+<div class="meta">
+<span>Primera carrera 11:30 · hierba</span><span>Previsión al 25/11: seco, 4–14 °C</span>
+<label class="sel" for="base">Pista al empezar la jornada
+<select id="base"><option value="bueno">Bueno</option><option value="bb">Bueno a blando</option><option value="blando">Blando</option><option value="pesado">Pesado</option></select></label>
+<button class="btn" id="resetAll" style="color:#fff;border-color:#6d8f7a">Borrar datos del día</button>
+</div></div></header>
+<nav class="tabs" id="tabs" role="tablist" aria-label="Carreras"></nav>
+<main>
+<section class="band"><div class="wrap" id="race"></div></section>
+<section class="band" style="padding-top:0"><div class="wrap">
+<h2 class="cond" style="font-size:32px;margin:0 0 12px">Resumen de la jornada</h2>
+<div class="sum" id="sum"></div>
+</div></section>
+<section class="band" style="background:var(--card);border-top:1px solid var(--line)"><div class="wrap prose">
+<h2 class="cond">¿Funciona? Validación con el 15 y el 22 de noviembre</h2>
+<p>He pasado el modelo por las 12 carreras de esas dos jornadas usando sólo lo que se sabía antes de correrlas (estadística de jinetes y preparadores de las jornadas anteriores) y lo he comparado con el resultado real.</p>
+<div id="bt"></div>
+<p class="note">Con 12 carreras la muestra es mínima y el modelo apenas mejora a elegir al azar en probabilidad. Por eso la apuesta de valor sólo se activa cuando escribes cuotas reales y mezcla esa información de mercado con el modelo. Ningún sistema garantiza un ROI positivo: apuesta sólo lo que puedas permitirte perder.</p>
+</div></section>
+<section class="band"><div class="wrap prose">
+<h2 class="cond">Cómo funciona</h2>
+<ol>
+<li><b>Forma</b>: últimas cinco actuaciones del programa oficial; la más reciente pesa más.</li>
+<li><b>Distancia y clase</b>: carreras conocidas en La Zarzuela, San Sebastián y Francia, ponderadas por lo cerca que están de la distancia de hoy y por su categoría.</li>
+<li><b>Terreno</b>: puestos conseguidos en pista blanda o muy blanda (sobre todo en Francia). Cuenta más cuanto más blanda esté la pista hoy.</li>
+<li><b>Jinete y preparador</b>: 24 carreras de noviembre, suavizadas hacia la media.</li>
+<li><b>Peso y cajón</b>: kilos respecto a la media (más importantes con distancia y barro) y ligera ventaja a la cuerda en 1.400–1.600 m.</li>
+<li><b>Tiempo en directo</b>: la lluvia ablanda la pista para esa carrera y las siguientes (llovizna +¼ de grado, lluvia +⅗, fuerte +1); el sol con más de 14 °C la seca un poco.</li>
+<li><b>Gemelas y tríos</b>: fórmula de Harville con descuento para el 2º y 3º puesto, que evita sobrevalorar a los favoritos.</li>
+<li><b>Valor</b>: con cuotas, la probabilidad para apostar es mercado<sup>0,65</sup> × modelo<sup>0,35</sup>, corrigiendo el sesgo de las cuotas largas. Hay valor si probabilidad × cuota &gt; 1. El importe sugerido es ¼ de Kelly sobre tu banca.</li>
+</ol>
+<p class="small">Fuentes: participantes definitivos del 29/11/2026 y de las jornadas del 1, 8, 15 y 22/11 (hipodromodelazarzuela.es); programa Quíntuple Plus nº 70 (loteriasyapuestas.es); historiales en turf-fr.com, turfoo.fr y skysports.com. Datos recogidos el 25/11/2026. Para muchos caballos con experiencia sólo en España no he encontrado historial en el extranjero.</p>
+</div></section>
+</main>
+<script>
+// Datos recopilados de los programas oficiales (participantes definitivos) del Hipódromo de La Zarzuela
+// y de las páginas de jornada (orden de llegada). Formas: la más reciente primero.
+const STATS_RACES = [
+ // fecha, carrera, dist, cat, llegada (5 primeros, por nº), participantes [nº, jinete, preparador]
+ {d:"01/11",r:1,dist:1200,cat:"D",arr:[1,4,2,9,10],p:[[1,"ARGUINZONES","J.JIMENEZ"],[2,"HAEDENS","G.ARIZKORRETA"],[3,"SACCU","A.TSERETELI"],[4,"FERREIRA","G.ARIZKORRETA"],[5,"ZAMBUDIO","J.C.CERQUEIRA"],[6,"SERRANO","M.A.GOICOECHEA"],[7,"DIESTRA","O.ANAYA"],[8,"E.A.RODRIGUEZ","D.DUARTE"],[9,"E.GUTIERREZ","M.A.ALVAREZ"],[10,"D.RODRIGUEZ","M.VILA"],[11,"VALENZUELA","J.M.OSORIO"]]},
+ {d:"01/11",r:2,dist:1800,cat:"C",arr:[7,4,3,2,5],p:[[1,"DE JULIAN","A.TSERETELI"],[2,"GELABERT","F.RODRIGUEZ"],[3,"JANACEK","G.ARIZKORRETA"],[4,"DIESTRA","J.C.ROSELL"],[5,"E.A.RODRIGUEZ","M.ALONSO R."],[6,"V.ALONSO","CH.DELCHER"],[7,"SIKOROVA","A.SOTO"]]},
+ {d:"01/11",r:3,dist:1500,cat:"D",arr:[3,10,5,8,14],p:[[1,"TOPIN","M.PEREZ"],[2,"ARGUINZONES","B.RAMA"],[3,"DE JULIAN","F.PEREZ"],[4,"E.A.RODRIGUEZ","M.AUGELLI"],[5,"A.GUTIERREZ","F.RODRIGUEZ"],[6,"SIKOROVA","O.ANAYA"],[7,"SERRANO","A.NUNEZ"],[8,"VALLE","O.ANAYA"],[9,"JANACEK","R.MARTIN A."],[10,"DIESTRA","M.A.ALVAREZ"],[11,"VALENZUELA","M.AUGELLI"],[12,"GELABERT","R.MARTIN A."],[13,"V.ALONSO","CH.DELCHER"],[14,"MELGAREJO","J.CALDERON"],[15,"D.RODRIGUEZ","A.SOTO"],[16,"FERREIRA","F.RODRIGUEZ"],[17,"A.MARTINEZ","M.VILA"],[18,"ZAMBUDIO","J.C.CERQUEIRA"]]},
+ {d:"01/11",r:4,dist:1500,cat:"D",arr:[10,3,1,9,11],p:[[1,"SIKOROVA","G.RODRIGUEZ"],[2,"BORREGO","G.RODRIGUEZ"],[3,"JANACEK","C.BUESA"],[4,"E.A.RODRIGUEZ","J.JIMENEZ"],[5,"ARGUINZONES","B.RAMA"],[6,"VALLE","O.ANAYA"],[7,"MELGAREJO","G.RODRIGUEZ"],[8,"A.MARTINEZ","B.RAMA"],[9,"VALENZUELA","Y.FORNERINO"],[10,"GELABERT","G.RODRIGUEZ"],[11,"CROUCH","O.ANAYA"],[12,"DIESTRA","O.ANAYA"]]},
+ {d:"01/11",r:5,dist:1600,cat:"A",arr:[9,6,5,3,2],p:[[1,"GELABERT","O.ANAYA"],[2,"VALLE","O.ANAYA"],[3,"SIKOROVA","C.BUESA"],[4,"DIESTRA","O.ANAYA"],[5,"CROUCH","G.ARIZKORRETA"],[6,"A.GUTIERREZ","M.ALONSO R."],[7,"MELGAREJO","G.ARIZKORRETA"],[8,"CADEL","E.ARGUINZONES"],[9,"JANACEK","G.ARIZKORRETA"]]},
+ {d:"01/11",r:6,dist:3200,cat:"C",arr:[7,9,8,3,5],p:[[1,"JANACEK","G.ARIZKORRETA"],[2,"AMATEUR","A.SOTO"],[3,"GELABERT","M.A.ALVAREZ"],[4,"ZAMBUDIO","J.HORCAJADA"],[5,"VALLE","G.ARIZKORRETA"],[6,"SIKOROVA","J.LOPEZ"],[7,"V.ALONSO","CH.DELCHER"],[8,"TOPIN","R.MAROTO"],[9,"FERREIRA","J.M.OSORIO"],[10,"E.GUTIERREZ","M.A.ALVAREZ"]]},
+ {d:"08/11",r:1,dist:1600,cat:"D",arr:[1,2,5,8,3],p:[[1,"VALLE","G.ARIZKORRETA"],[2,"GAVILAN","R.MAROTO"],[3,"FAYOS","J.LOPEZ"],[4,"DE JULIAN","B.VALENTI"],[5,"GELABERT","F.RODRIGUEZ"],[6,"MELGAREJO","J.CALDERON"],[7,"MENDIZABAL","G.ARIZKORRETA"],[8,"JANACEK","G.ARIZKORRETA"],[9,"SIKOROVA","A.SOTO"]]},
+ {d:"08/11",r:2,dist:1600,cat:"C",arr:[5,9,10,12,1],p:[[1,"GELABERT","G.ARIZKORRETA"],[2,"DIESTRA","J.C.ROSELL"],[3,"MENDIZABAL","G.ARIZKORRETA"],[4,"FAYOS","J.LOPEZ"],[5,"V.ALONSO","CH.DELCHER"],[6,"A.GUTIERREZ","F.RODRIGUEZ"],[7,"GAVILAN","R.MAROTO"],[8,"SHOEMARK","G.ARIZKORRETA"],[9,"MELGAREJO","F.PEREZ"],[10,"JANACEK","G.ARIZKORRETA"],[11,"VALLE","M.PEREZ"],[12,"DE JULIAN","A.TSERETELI"]]},
+ {d:"08/11",r:3,dist:2000,cat:"D",am:1,arr:[4,10,9,8,12],p:[[1,"AMATEUR","R.MAROTO"],[2,"AMATEUR","E.ARGUINZONES"],[3,"AMATEUR","G.ARIZKORRETA"],[4,"AMATEUR","A.TSERETELI"],[5,"AMATEUR","A.TSERETELI"],[6,"AMATEUR","M.PULIDO"],[7,"AMATEUR","M.A.ALVAREZ"],[8,"AMATEUR","M.A.ALVAREZ"],[9,"AMATEUR","CH.DELCHER"],[10,"AMATEUR","C.BUESA"],[11,"AMATEUR","M.PEREZ"],[12,"AMATEUR","J.L.MARTINEZ"],[13,"AMATEUR","M.A.GOICOECHEA"]]},
+ {d:"08/11",r:4,dist:1100,cat:"C",arr:[5,8,3,1,2],p:[[1,"GELABERT","A.TSERETELI"],[2,"VALLE","O.ANAYA"],[3,"MELGAREJO","G.ARIZKORRETA"],[4,"ZAMBUDIO","J.HORCAJADA"],[5,"FAYOS","J.M.OSORIO"],[6,"SHOEMARK","G.ARIZKORRETA"],[7,"DE JULIAN","J.LOPEZ"],[8,"JANACEK","G.ARIZKORRETA"],[9,"DIESTRA","A.SOTO"],[10,"MENDIZABAL","G.ARIZKORRETA"],[11,"V.ALONSO","CH.DELCHER"],[12,"SIKOROVA","R.MARTIN A."]]},
+ {d:"08/11",r:5,dist:2000,cat:"A",arr:[6,12,1,13,7],p:[[1,"MENDIZABAL","G.ARIZKORRETA"],[2,"SIKOROVA","G.ARIZKORRETA"],[3,"PLATEAUX","CH.DELCHER"],[4,"VALLE","O.ANAYA"],[5,"V.ALONSO","CH.DELCHER"],[6,"A.GUTIERREZ","M.ALONSO R."],[7,"JANACEK","G.ARIZKORRETA"],[8,"GAVILAN","G.ARIZKORRETA"],[9,"DUBORD","G.VAZ"],[10,"MELGAREJO","M.DELCHER S."],[11,"FAYOS","F.JIMENEZ"],[12,"SHOEMARK","C.BUESA"],[13,"GELABERT","G.ARIZKORRETA"]]},
+ {d:"08/11",r:6,dist:1800,cat:"D",arr:[2,1,6,3,7],p:[[1,"GELABERT","R.MARTIN A."],[2,"MELGAREJO","J.L.MARTINEZ"],[3,"GAVILAN","R.MAROTO"],[4,"SACCU","A.SOTO"],[5,"V.ALONSO","CH.DELCHER"],[6,"JANACEK","G.ARIZKORRETA"],[7,"PLATEAUX","CH.DELCHER"]]},
+ {d:"15/11",r:1,dist:1400,cat:"D",arr:[6,7,1,2,3],p:[[1,"MELGAREJO","M.ALONSO R."],[2,"FAYOS","F.JIMENEZ"],[3,"GELABERT","A.SOTO"],[4,"JANACEK","CH.DELCHER"],[5,"VALENZUELA","M.ALONSO R."],[6,"VALLE","G.ARIZKORRETA"],[7,"DE JULIAN","M.A.GOICOECHEA"]]},
+ {d:"15/11",r:2,dist:1500,cat:"C",arr:[2,6,1,5,3],p:[[1,"VALLE","M.A.GOICOECHEA"],[2,"GELABERT","A.TSERETELI"],[3,"MELGAREJO","A.NUNEZ"],[4,"JANACEK","G.ARIZKORRETA"],[5,"FAYOS","J.M.OSORIO"],[6,"DIESTRA","M.A.GOICOECHEA"]]},
+ {d:"15/11",r:3,dist:2100,cat:"D",arr:[7,1,10,6,5],p:[[1,"FAYOS","J.M.OSORIO"],[2,"VALENZUELA","P.ALVES"],[3,"GELABERT","A.TSERETELI"],[4,"V.ALONSO","CH.DELCHER"],[5,"DE JULIAN","F.PEREZ"],[6,"FERREIRA","F.RODRIGUEZ"],[7,"JANACEK","J.LOPEZ"],[8,"MELGAREJO","A.SOTO"],[9,"E.A.RODRIGUEZ","B.VALENTI"],[10,"ZAMBUDIO","F.PEREZ"],[11,"VALLE","R.MAROTO"],[12,"AMATEUR","J.C.ROSELL"],[13,"DIESTRA","F.JIMENEZ"],[14,"D.RODRIGUEZ","J.LOPEZ"],[15,"AMATEUR","I.OLIVA"]]},
+ {d:"15/11",r:4,dist:2100,cat:"D",arr:[6,1,5,8,10],p:[[1,"A.MARTINEZ","C.BUESA"],[2,"AMATEUR","A.SOTO"],[3,"GELABERT","J.LOPEZ"],[4,"JANACEK","G.ARIZKORRETA"],[5,"E.GUTIERREZ","G.ARIZKORRETA"],[6,"MELGAREJO","B.RAMA"],[7,"DIESTRA","C.BUESA"],[8,"V.ALONSO","R.MAROTO"],[9,"VALLE","G.ARIZKORRETA"],[10,"AMATEUR","J.C.CERQUEIRA"],[11,"ZAMBUDIO","J.HORCAJADA"],[12,"AMATEUR","B.RAMA"]]},
+ {d:"15/11",r:5,dist:1500,cat:"C",arr:[6,1,5,4,7],p:[[1,"VALLE","G.ARIZKORRETA"],[2,"V.ALONSO","CH.DELCHER"],[3,"FAYOS","F.JIMENEZ"],[4,"MELGAREJO","CH.DELCHER"],[5,"A.MARTINEZ","B.RAMA"],[6,"GELABERT","A.SOTO"],[7,"JANACEK","G.ARIZKORRETA"],[8,"DE JULIAN","M.A.ALVAREZ"],[9,"DIESTRA","F.JIMENEZ"]]},
+ {d:"15/11",r:6,dist:1600,cat:"D",am:1,arr:[5,4,6,7,1],p:[[1,"AMATEUR","G.ARIZKORRETA"],[2,"AMATEUR","F.OLIVA"],[3,"AMATEUR","R.MAROTO"],[4,"AMATEUR","J.C.ROSELL"],[5,"AMATEUR","M.AUGELLI"],[6,"AMATEUR","A.TSERETELI"],[7,"AMATEUR","M.AUGELLI"]]},
+ {d:"22/11",r:1,dist:1500,cat:"C",arr:[4,5,2,6,3],p:[[1,"A.GUTIERREZ","CH.DELCHER"],[2,"MELGAREJO","G.ARIZKORRETA"],[3,"VALLE","A.SOTO"],[4,"FAYOS","F.RODRIGUEZ"],[5,"GELABERT","A.TSERETELI"],[6,"JANACEK","G.ARIZKORRETA"],[7,"DE JULIAN","J.CALDERON"],[8,"ZAMBUDIO","J.C.CERQUEIRA"],[9,"SIKOROVA","C.BUESA"]]},
+ {d:"22/11",r:2,dist:1400,cat:"D",arr:[2,10,4,1,9],p:[[1,"FAYOS","M.AUGELLI"],[2,"JANACEK","G.ARIZKORRETA"],[3,"ARGUINZONES","B.RAMA"],[4,"VALLE","C.BUESA"],[5,"MELGAREJO","A.SOTO"],[6,"A.GUTIERREZ","CH.DELCHER"],[7,"DE JULIAN","J.J.CHAVARRIAS"],[8,"GELABERT","R.MARTIN A."],[9,"V.ALONSO","F.RODRIGUEZ"],[10,"SIKOROVA","M.A.ALVAREZ"]]},
+ {d:"22/11",r:3,dist:1800,cat:"D",arr:[10,17,1,12,18],p:[[1,"A.GUTIERREZ","CH.DELCHER"],[2,"JANACEK","CH.DELCHER"],[3,"ZAMBUDIO","J.HORCAJADA"],[4,"VALLE","A.SOTO"],[5,"BESNIER","A.SOTO"],[6,"ARGUINZONES","J.CALDERON"],[7,"SIKOROVA","C.BUESA"],[8,"FAYOS","J.M.OSORIO"],[9,"DE JULIAN","A.TSERETELI"],[10,"V.ALONSO","M.PEREZ"],[11,"E.GUTIERREZ","J.CALDERON"],[12,"GELABERT","R.MARTIN A."],[13,"MELGAREJO","J.L.MARTINEZ"],[14,"RAMALLO","M.A.GOICOECHEA"],[15,"SACCU","A.SOTO"],[16,"AMATEUR","R.MARTIN A."],[17,"VALENZUELA","M.AUGELLI"],[18,"D.RODRIGUEZ","R.MAROTO"],[19,"A.MARTINEZ","F.JIMENEZ"],[20,"SERRANO","A.NUNEZ"]]},
+ {d:"22/11",r:4,dist:1800,cat:"D",arr:[2,8,5,6,4],p:[[1,"ARGUINZONES","G.RODRIGUEZ"],[2,"DE JULIAN","F.PEREZ"],[3,"DIESTRA","G.RODRIGUEZ"],[4,"FAYOS","J.M.OSORIO"],[5,"JANACEK","G.ARIZKORRETA"],[6,"ZAMBUDIO","J.C.CERQUEIRA"],[7,"A.GUTIERREZ","Y.FORNERINO"],[8,"MELGAREJO","F.PEREZ"],[9,"E.GUTIERREZ","G.ARIZKORRETA"],[10,"VALLE","M.PEREZ"],[11,"SIKOROVA","M.A.ALVAREZ"],[12,"GELABERT","G.RODRIGUEZ"]]},
+ {d:"22/11",r:5,dist:1400,cat:"A",arr:[11,7,6,3,5],p:[[1,"ARGUINZONES","J.JIMENEZ"],[2,"ZAMBUDIO","J.C.CERQUEIRA"],[3,"JANACEK","G.ARIZKORRETA"],[4,"BESNIER","R.MAROTO"],[5,"MELGAREJO","G.ARIZKORRETA"],[6,"DE JULIAN","J.LOPEZ"],[7,"DIESTRA","D.SARABIA"],[8,"SIKOROVA","A.TSERETELI"],[9,"GELABERT","M.DELCHER S."],[10,"A.GUTIERREZ","M.ALONSO R."],[11,"VALLE","CH.DELCHER"]]},
+ {d:"22/11",r:6,dist:2200,cat:"C",arr:[2,4,6,1,5],p:[[1,"GELABERT","A.TSERETELI"],[2,"JANACEK","G.ARIZKORRETA"],[3,"FAYOS","J.LOPEZ"],[4,"AMATEUR","A.SOTO"],[5,"V.ALONSO","CH.DELCHER"],[6,"DE JULIAN","A.TSERETELI"]]}
+];
+
+// Programa del domingo 29/11/2026. kg = peso a llevar (con descargo si lo hay).
+// runs: actuaciones conocidas reconstruidas (fecha, distancia, categoría, puesto, nº de participantes, peso, nota)
+const RACES = [
+ {n:1,name:"Premio Jesús Fernández Mur",sub:"Potrancas 2 años · Categoría C",dist:1600,cat:"C",hora:"11:30",premio:"13.600 €",horses:[
+  {no:1,name:"Duquesa Blanca (IRE)",age:2,kg:57,j:"GELABERT",jn:"J. Gelabert",t:"G.ARIZKORRETA",c:"Mediterráneo",draw:3,form:[]},
+  {no:2,name:"Garabitas (GB)",age:2,kg:57,j:"JANACEK",jn:"V. Janáček",t:"G.ARIZKORRETA",c:"Yeguada Rocío",draw:1,form:[]},
+  {no:3,name:"Ops (GB)",age:2,kg:57,j:"MELGAREJO",jn:"I. Melgarejo",t:"J.L.MARTINEZ",c:"La Toledana",draw:5,form:[]},
+  {no:4,name:"Ruki (FR)",age:2,kg:57,j:"E.A.RODRIGUEZ",jn:"E.A. Rodríguez",t:"M.ALONSO R.",c:"Martul",draw:4,form:[]},
+  {no:5,name:"Strategy (FR)",eq:"(8)",age:2,kg:57,j:"SIKOROVA",jn:"D. Sikorová",t:"A.SOTO",c:"San José",draw:2,form:[]}]},
+ {n:2,name:"Premio Ceferino Carrasco",sub:"Potros 2 años · Categoría C",dist:1600,cat:"C",hora:"12:05",premio:"13.600 €",horses:[
+  {no:1,name:"Adonis (FR)",age:2,kg:57,j:"VALLE",jn:"R.N. Valle",t:"G.ARIZKORRETA",c:"Yeguada AGF",draw:6,form:[]},
+  {no:2,name:"Asdrubal (FR)",age:2,kg:57,j:"E.GUTIERREZ",jn:"E. Gutiérrez",t:"G.ARIZKORRETA",c:"Yeguada AGF",draw:11,form:[]},
+  {no:3,name:"Aspen Dominique (GER)",eq:"(4)(8)",age:2,kg:57,j:"ZAMBUDIO",jn:"J. Zambudio",t:"J.HORCAJADA",c:"Almohaza",draw:10,form:[]},
+  {no:4,name:"Camaguey (GB)",eq:"(8)",age:2,kg:57,j:"SIKOROVA",jn:"D. Sikorová",t:"M.AUGELLI",c:"Díaz Sarmiento",draw:7,form:[]},
+  {no:5,name:"Escipion (IRE)",age:2,kg:57,j:"JANACEK",jn:"V. Janáček",t:"G.ARIZKORRETA",c:"Yeguada Rocío",draw:1,form:[]},
+  {no:6,name:"Ferball (IRE)",eq:"(8)",age:2,kg:57,j:"DE JULIAN",jn:"N. de Julián",t:"B.VALENTI",c:"Zurraquín",draw:2,form:[]},
+  {no:7,name:"Haley de Molene",age:2,kg:57,j:"V.ALONSO",jn:"V. Alonso V.",t:"CH.DELCHER",c:"Sapphire Partners",draw:3,form:[]},
+  {no:8,name:"Jutusco (GB)",eq:"(8)",age:2,kg:57,j:"FERREIRA",jn:"D. Ferreira",t:"J.C.CERQUEIRA",c:"Los Niños",draw:8,form:[]},
+  {no:9,name:"Mortirolo",age:2,kg:57,j:"MELGAREJO",jn:"I. Melgarejo",t:"A.SOTO",c:"Yeguada Urdiñ-Oriya",draw:5,form:[]},
+  {no:10,name:"Naveros (IRE)",age:2,kg:57,j:"FAYOS",jn:"B. Fayos",t:"J.LOPEZ",c:"Celso Méndez",draw:9,form:[]},
+  {no:11,name:"Nividic (FR)",age:2,kg:57,j:"GELABERT",jn:"J. Gelabert",t:"A.TSERETELI",c:"Mediterráneo",draw:4,form:[]}]},
+ {n:3,name:"Premio Marcos Carrasco",sub:"Hándicap · referencia 3 años 34, 4 y más 33",dist:1600,cat:"D",hora:"12:40",premio:"8.500 €",hcp:1,horses:[
+  {no:1,name:"Another Rose",eq:"(8)",age:4,kg:63,j:"JANACEK",jn:"V. Janáček",t:"B.VALENTI",c:"Ten Fe",draw:7,form:["06","12","07","06","02"]},
+  {no:2,name:"Lady Cocody (FR)",age:4,kg:62.5,j:"PASQUIER",jn:"S. Pasquier",t:"F.RODRIGUEZ",c:"Cuadra A.F.F",draw:6,form:["03","10","03","01","03"],runs:[{d:"01/11",dist:1500,cat:"D",pos:3,of:18,kg:62.5,txt:"Hándicap Roque Nublo"}]},
+  {no:3,name:"Cudillero",eq:"(8)",age:3,kg:62.5,j:"FAYOS",jn:"B. Fayos",t:"M.A.GOICOECHEA",c:"Río Cubas",draw:4,form:["05","05","07","02","03"]},
+  {no:4,name:"Juglar (GB)",age:3,kg:61.5,j:"SIKOROVA",jn:"D. Sikorová (61,5)",t:"A.SOTO",c:"Doble H",draw:1,form:["06","01","03"],runs:[{d:"08/11",dist:1800,cat:"D",pos:6,of:7,kg:56.5,txt:"Premio Casualidad"}]},
+  {no:5,name:"Zama (FR)",age:3,kg:60.5,j:"GELABERT",jn:"J. Gelabert",t:"A.TSERETELI",c:"Mediterráneo",draw:2,form:["03","01","08","05","04"]},
+  {no:6,name:"Dias Felices (FR)",eq:"(8)",age:5,kg:59,j:"VALLE",jn:"R.N. Valle",t:"CH.DELCHER",c:"Duende del Sur",draw:9,form:["07","01","04","06","05"],runs:[{d:"08/11",dist:1100,cat:"C",pos:7,of:12,kg:52.5,txt:"Hándicap Bariloche (recta)"}]},
+  {no:7,name:"Asahi",age:4,kg:59,j:"DIESTRA",jn:"J.C. Diestra",t:"M.A.ALVAREZ",c:"Celso Méndez",draw:5,form:["02","11","11","07","05"],runs:[{d:"01/11",dist:1500,cat:"D",pos:2,of:18,kg:59,txt:"Hándicap Roque Nublo"}]},
+  {no:8,name:"Adhonorem (ITY)",eq:"(8)",age:3,kg:58.5,j:"MELGAREJO",jn:"I. Melgarejo",t:"A.SOTO",c:"Ten Fe",draw:8,form:["08","01","02","04","07"],runs:[{d:"22/11",dist:1400,cat:"D",pos:8,of:10,kg:58.5,txt:"Hándicap Enrique Romera"}]},
+  {no:9,name:"Sweet Wish (FR)",eq:"(3)(8)",age:6,kg:54,j:"D.RODRIGUEZ",jn:"D. Rodríguez (54)",t:"V.H.ROMEA",c:"Olympus",draw:3,form:["01","07","04","08","07"]}]},
+ {n:4,name:"Premio Entre Copas – Gladiateur",sub:"Fondo · Categoría B",dist:4000,cat:"B",hora:"13:15",premio:"25.500 €",horses:[
+  {no:1,name:"Chergui (FR)",age:6,kg:59,j:"LE QUILLEUC",jn:"S. Le Quilleuc",t:"M.ALONSO R.",c:"Imperial Stud",draw:2,form:["06","03","01","08","03"],note:"Fondista con experiencia en Francia; 34 salidas, 6 victorias.",runs:[{d:"02/11",dist:2400,cat:"FR",pos:6,of:6,g:3,kg:57.5,txt:"Grand Prix de Nantes (Francia), muy blando"},{d:"02/10",dist:2300,cat:"FR",pos:3,of:8,g:2,kg:57.5,txt:"GP de la Ville de Dax (Francia), blando"},{d:"13/09",dist:2800,cat:"B",pos:1,of:7,kg:59,txt:"Donostiako 110 Sari Nagusia (San Sebastián)"},{d:"15/08",dist:2400,cat:"A",pos:8,of:12,txt:"Copa de Oro de San Sebastián"},{d:"2026",dist:2400,cat:"FR",pos:1,of:14,kg:59,txt:"Prix de Laruns, Pau (Francia, arena)"}]},
+  {no:2,name:"Don Bosco (FR)",eq:"(5)(8)",age:5,kg:59,j:"ZAMBUDIO",jn:"J. Zambudio",t:"J.HORCAJADA",c:"Bolak",draw:3,form:["10","06","01","01","04"],runs:[{d:"01/11",dist:3200,cat:"C",pos:10,of:10,kg:57.5,txt:"Hándicap Francisco Cadenas"},{d:"13/09",dist:2800,cat:"B",pos:6,of:7,kg:59,txt:"Donostiako 110 Sari Nagusia (San Sebastián)"},{d:"02/09",dist:2400,cat:"C",pos:1,of:6,kg:59.5,txt:"San Sebastián (ganó a Dancelot)"}]},
+  {no:3,name:"Eolo (IRE)",eq:"(5)(8)",age:5,kg:59,j:"MELGAREJO",jn:"I. Melgarejo",t:"A.SOTO",c:"La Toledana",draw:4,form:["05","03","01","04","01"]},
+  {no:4,name:"Kindleo (GB)",eq:"(8)",age:4,kg:59,j:"PASQUIER",jn:"S. Pasquier",t:"CH.DELCHER",c:"M. de Miraflores",draw:12,form:["06","04","08","NP","06"],note:"Ganador en Francia con C. Ferland en terreno bueno a blando.",runs:[{d:"08/11",dist:2000,cat:"A",pos:6,of:13,kg:58,txt:"GP Román Martín"},{d:"18/10",dist:2400,cat:"A",pos:4,of:13,kg:60,txt:"GP Memorial Duque de Toledo"},{d:"12/09/25",dist:2200,cat:"FR",pos:1,of:6,g:1,txt:"Le Mans (Francia), bueno a blando"},{d:"11/08/25",dist:2100,cat:"FR",pos:1,of:8,g:1,txt:"La Teste (Francia), bueno a blando"}]},
+  {no:5,name:"Master Cath (FR)",eq:"(5)",age:4,kg:59,j:"VALLE",jn:"R.N. Valle",t:"D.SARABIA",c:"Río Cubas",draw:8,form:["06","06","09","01","03"],note:"Antes en Francia (N. Perret): ganó en terreno muy blando y blando.",runs:[{d:"18/10",dist:2400,cat:"A",pos:6,of:13,kg:60,txt:"GP Memorial Duque de Toledo"},{d:"15/08",dist:2400,cat:"A",pos:9,of:12,txt:"Copa de Oro de San Sebastián"},{d:"19/07",dist:2200,cat:"C",pos:1,of:6,kg:57,txt:"Premio Garda Seguridad (San Sebastián)"},{d:"2025",dist:2400,cat:"FR",pos:1,of:5,g:3,txt:"Lyon-Parilly (Francia), muy blando"},{d:"2025",dist:2000,cat:"FR",pos:1,of:7,g:2,txt:"Marseille-Borély (Francia), blando"}]},
+  {no:6,name:"Nat Impact (GB)",eq:"(8)",age:5,kg:59,j:"FAYOS",jn:"B. Fayos",t:"J.M.OSORIO",c:"África",draw:5,form:["04","01","03","01","06"],runs:[{d:"25/10",dist:2200,cat:"C",pos:4,of:13,kg:59.5,txt:"Hándicap Infanta Isabel"},{d:"20/09",dist:2200,cat:"C",pos:1,of:11,kg:57.5,txt:"Premio Familia Gelabert"},{d:"25/07",dist:2200,cat:"C",pos:3,of:8,kg:59.5,txt:"San Sebastián Gastronomika"}]},
+  {no:7,name:"Roncal",age:4,kg:59,j:"CORALLO",jn:"E. Corallo",t:"G.ARIZKORRETA",c:"Yeguada Rocío",draw:10,form:["NP","06","02","01","02"],runs:[{d:"15/11",dist:2100,cat:"D",pos:"NP",of:12,kg:62,txt:"Hándicap Nemesio Fdez.-Cuesta (retirado)"},{d:"01/11",dist:3200,cat:"C",pos:6,of:10,kg:63,txt:"Hándicap Francisco Cadenas (peso máximo)"}]},
+  {no:8,name:"Shackleton (IRE)",eq:"(8)",age:4,kg:59,j:"JANACEK",jn:"V. Janáček",t:"G.ARIZKORRETA",c:"Yeguada Rocío",draw:9,form:["08","03","03","04","04"],runs:[{d:"18/10",dist:2400,cat:"A",pos:8,of:13,txt:"GP Memorial Duque de Toledo"},{d:"15/08",dist:2400,cat:"A",pos:3,of:12,txt:"Copa de Oro de San Sebastián"},{d:"27/06",dist:2500,cat:"A",pos:4,of:10,txt:"Gran Premio de Madrid"}]},
+  {no:9,name:"Sirjan (GER)",age:6,kg:59,j:"GELABERT",jn:"J. Gelabert",t:"A.TSERETELI",c:"Cum Laude Racing",draw:7,form:["03","02","02","01","02"],note:"Mejor nivel del lote: colocado en tres grandes premios de 2.400–2.500 m.",runs:[{d:"18/10",dist:2400,cat:"A",pos:3,of:13,kg:60,txt:"GP Memorial Duque de Toledo"},{d:"15/08",dist:2400,cat:"A",pos:2,of:12,kg:59,txt:"Copa de Oro de San Sebastián"},{d:"27/06",dist:2500,cat:"A",pos:2,of:10,kg:58,txt:"Gran Premio de Madrid"},{d:"30/11/25",dist:2400,cat:"FR",pos:2,of:0,g:2,kg:58,txt:"Toulouse (Francia), terreno pegajoso"}]},
+  {no:10,name:"Heliopolis (FR)",eq:"(3)",age:7,kg:57.5,j:"AMATEUR",jn:"Srta. M. Mora-Figueroa",t:"A.SOTO",c:"Mora-Figueroa Hnos.",draw:6,form:["07","09","05","06","02"],runs:[{d:"01/11",dist:3200,cat:"C",pos:7,of:10,kg:61.5,txt:"Hándicap Francisco Cadenas"},{d:"2026",dist:2400,cat:"FR",pos:2,of:14,kg:57.5,txt:"Prix de Laruns, Pau (Francia, arena)"}]},
+  {no:11,name:"Dancelot (FR)",age:3,kg:56,j:"V.ALONSO",jn:"V. Alonso V.",t:"CH.DELCHER",c:"M. de Miraflores",draw:1,form:["01","01","04","NP","06"],runs:[{d:"01/11",dist:3200,cat:"C",pos:1,of:10,kg:53,txt:"Hándicap Francisco Cadenas"},{d:"20/09",dist:2200,cat:"C",pos:1,of:11,kg:62,txt:"Premio Revista Pura Sangre"},{d:"02/09",dist:2400,cat:"C",pos:4,of:6,kg:56.5,txt:"San Sebastián"}]},
+  {no:12,name:"Light L'Audrielle (FR)",age:3,kg:56,j:"SIKOROVA",jn:"D. Sikorová",t:"M.A.ALVAREZ",c:"Celso Méndez",draw:11,form:["04","05","05","02","02"],note:"Procede de Francia (Rouget/Escuder).",runs:[{d:"01/11",dist:3200,cat:"C",pos:4,of:10,kg:58.5,txt:"Hándicap Francisco Cadenas"},{d:"19/07",dist:2200,cat:"C",pos:2,of:0,kg:59,txt:"Premio Gipuzkoa Kirolak (San Sebastián)"},{d:"2026",dist:2400,cat:"A",pos:2,of:6,kg:57,txt:"GP Villapadierna"},{d:"17/01",dist:1500,cat:"FR",pos:2,of:15,g:1,txt:"Tarbes (Francia), bueno a blando"}]}]},
+ {n:5,name:"Premio Veil Picard",sub:"2 años · Categoría B",dist:2000,cat:"B",hora:"13:50",premio:"25.500 €",horses:[
+  {no:1,name:"Djiango (FR)",eq:"(3)",age:2,kg:57,j:"PASQUIER",jn:"S. Pasquier",t:"F.RODRIGUEZ",c:"Cuadra A.F.F",draw:2,form:["04","02"],runs:[{d:"01/11",dist:1800,cat:"C",pos:4,of:7,kg:57,txt:"Premio Fabio de Turnes"}]},
+  {no:2,name:"Requejo Legend (IRE)",eq:"(8)",age:2,kg:57,j:"CORALLO",jn:"E. Corallo",t:"M.ALONSO R.",c:"Balbás Alonso",draw:7,form:["07","01","01","02"]},
+  {no:3,name:"Siggy Marine (FR)",age:2,kg:57,j:"V.ALONSO",jn:"V. Alonso V.",t:"CH.DELCHER",c:"M. de Miraflores",draw:5,form:["07"],runs:[{d:"01/11",dist:1800,cat:"C",pos:7,of:7,kg:55.5,txt:"Premio Fabio de Turnes (debut)"}]},
+  {no:4,name:"Skyred (FR)",eq:"(8)",age:2,kg:57,j:"GELABERT",jn:"J. Gelabert",t:"J.C.ROSELL",c:"San José",draw:4,form:["02","06","NP","02","NP"],runs:[{d:"01/11",dist:1800,cat:"C",pos:2,of:7,kg:57,txt:"Premio Fabio de Turnes"}],note:"Antes fue 2º de Mello Mello por 3/4 de cuerpo."},
+  {no:5,name:"State King (FR)",age:2,kg:57,j:"LE QUILLEUC",jn:"S. Le Quilleuc",t:"M.ALONSO R.",c:"Martul",draw:6,form:["05","03","10"],runs:[{d:"01/11",dist:1800,cat:"C",pos:5,of:7,kg:57,txt:"Premio Fabio de Turnes"}]},
+  {no:6,name:"Chistera (IRE)",eq:"(4)(8)",age:2,kg:55.5,j:"SIKOROVA",jn:"D. Sikorová",t:"C.BUESA",c:"Marengo",draw:8,form:["04","03"]},
+  {no:7,name:"Mello Mello (FR)",age:2,kg:56,j:"JANACEK",jn:"V. Janáček (56)",t:"G.ARIZKORRETA",c:"Galoperx",draw:1,form:["03","03","02","04","01"],runs:[{d:"01/11",dist:1800,cat:"C",pos:3,of:7,kg:57,txt:"Premio Fabio de Turnes"}]},
+  {no:8,name:"Silent Faith (IRE)",age:2,kg:55.5,j:"MELGAREJO",jn:"I. Melgarejo",t:"A.SOTO",c:"Ezenel",draw:9,form:["01"],runs:[{d:"01/11",dist:1800,cat:"C",pos:1,of:7,kg:54,txt:"Premio Fabio de Turnes (debut, ganó)"}]},
+  {no:9,name:"Strivena (IRE)",eq:"(3)",age:2,kg:55.5,j:"DE JULIAN",jn:"N. de Julián",t:"V.H.ROMEA",c:"Annua Racing",draw:3,form:["04"]}]},
+ {n:6,name:"Premio Casaca",sub:"3 años · Categoría D",dist:1400,cat:"D",hora:"14:25",premio:"8.500 €",horses:[
+  {no:1,name:"Ballistic Missile (IRE)",eq:"(8)",age:3,kg:61,j:"JANACEK",jn:"V. Janáček",t:"G.ARIZKORRETA",c:"Yeguada Rocío",draw:8,form:["02","01","06","02","18"],runs:[{d:"01/11",dist:1200,cat:"D",pos:1,of:11,kg:58,txt:"Premio Ovidio Rodríguez (recta)"}]},
+  {no:2,name:"Amazonico (FR)",age:3,kg:59,j:"V.ALONSO",jn:"V. Alonso V. (59)",t:"CH.DELCHER",c:"M. de Miraflores",draw:4,form:["01","01","02","03","08"],runs:[{d:"08/11",dist:1600,cat:"C",pos:1,of:12,kg:60,txt:"Hándicap Infanta Beatriz"}]},
+  {no:3,name:"Duke of Cumberland (IRE)",eq:"(8)",age:3,kg:59,j:"SIKOROVA",jn:"D. Sikorová (59)",t:"M.AUGELLI",c:"Mediterráneo",draw:7,form:["01","04","06","03","04"]},
+  {no:4,name:"Never Ever (IRE)",age:3,kg:60,j:"MELGAREJO",jn:"I. Melgarejo",t:"B.RAMA",c:"Soñador",draw:1,form:["09","03","04","01","01"],note:"Corrió en Irlanda a 2 años con J.P. O'Brien (rating IHRB 78); se cayó en Madrid el 16/07."},
+  {no:5,name:"Shine Sun (GB)",age:3,kg:60,j:"GELABERT",jn:"J. Gelabert",t:"G.RODRIGUEZ",c:"Mediterráneo",draw:6,form:["03","02","02","04","NP"],runs:[{d:"01/11",dist:1500,cat:"D",pos:3,of:12,kg:62,txt:"Hándicap Karluv Most (peso máximo)"}]},
+  {no:6,name:"Lord Jinks (FR)",age:3,kg:58,j:"PASQUIER",jn:"S. Pasquier",t:"F.RODRIGUEZ",c:"Cuadra A.F.F",draw:2,form:["01","03","05","04"]},
+  {no:7,name:"Acaso (GB)",eq:"(8)",age:3,kg:57,j:"FAYOS",jn:"B. Fayos",t:"J.M.OSORIO",c:"África",draw:5,form:[]},
+  {no:8,name:"Balook (GB)",age:3,kg:57,j:"DE JULIAN",jn:"N. de Julián",t:"CH.DELCHER",c:"Agrado",draw:9,form:["05","07"],runs:[{d:"08/11",dist:1800,cat:"D",pos:5,of:7,kg:57,txt:"Premio Casualidad"}]},
+  {no:9,name:"Lord Dixie (FR)",age:3,kg:57,j:"VALLE",jn:"R.N. Valle",t:"F.RODRIGUEZ",c:"Cuadra A.F.F",draw:3,form:["02","03","03"]}]}
+];
+// Jinetes internacionales sin muestra local: se les asigna un valor previo alto (jockeys de primer nivel en Francia/Italia).
+const VISITORS = {"PASQUIER":0.75,"LE QUILLEUC":0.6,"CORALLO":0.6};
+if (typeof module!=="undefined") module.exports={STATS_RACES,RACES,VISITORS};
+
+// Datos para validar el modelo: programas oficiales del 15/11 y 22/11/2026 (antes de correr) y su resultado real.
+// Cada caballo: [nº, kg a llevar, cajón, forma previa]. Jinete y preparador salen de STATS_RACES.
+const BT = [
+ {d:"15/11",r:1,dist:1400,cat:"D",h:[[1,59,3,"02,C,05,01,03"],[2,58,6,"01,03,04"],[3,55,7,"05"],[4,56,1,"NP"],[5,54.5,2,"NP"],[6,54,5,"05"],[7,53.5,4,"04"]]},
+ {d:"15/11",r:2,dist:1500,cat:"C",h:[[1,57,5,"06,14"],[2,57,3,"05,07"],[3,57,2,""],[4,57,6,""],[5,57,1,"10"],[6,57,4,"03,08"]]},
+ {d:"15/11",r:3,dist:2100,cat:"D",h:[[1,63,13,"02,03,02,03,02"],[2,61.5,11,"02,01,01,05,05"],[3,61,14,"04,07,08,07,02"],[4,60,9,"NP,05,10,06"],[5,60,5,"04,02,09,05,05"],[6,59,10,"05,04,04,09,05"],[7,59,2,"01,03,08,10,08"],[8,59,3,"06,07,02,08"],[9,56,15,"08,02,06,03,01"],[10,56.5,1,"13,08,05,02,01"],[11,57.5,4,"05,09,06,07,05"],[12,53,6,"NP,05,02,04,NP"],[13,55.5,12,"02,06,05,02,01"],[14,49,7,"03,06,09,04,06"],[15,49,8,"03,04,02,03,05"]]},
+ {d:"15/11",r:4,dist:2100,cat:"D",h:[[1,62,6,"01,01,01,02,03"],[2,60,12,"07,01,07,01,03"],[3,62.5,8,"04,03,01,01,05"],[4,62,2,"06,02,01,02,04"],[5,57,1,"01,02,05,01,09"],[6,58.5,11,"06,02,06,09,12"],[7,57.5,9,"10,05,NP,03,13"],[8,55,4,"06,01,04,02,07"],[9,55,10,"05,05,06,08,03"],[10,52.5,5,"03,03,03,03,03"],[11,54,3,"08,10,02,03,12"],[12,49.5,7,"07,03,01,06,07"]]},
+ {d:"15/11",r:5,dist:1500,cat:"C",h:[[1,57,7,"01,04,01,02"],[2,57,5,"05,13"],[3,57,3,"06,02"],[4,57,6,"07"],[5,57,2,"08"],[6,57,1,"02,05,01,06"],[7,57,4,"05,01"],[8,57,9,"10"],[9,57,8,""]]},
+ {d:"15/11",r:6,dist:1600,cat:"D",h:[[1,70,2,"02,02,02,02,04"],[2,66.5,1,"03,04,01,06,07"],[3,65.5,6,"01,03,01,07,05"],[4,64.5,5,"11,03,10,01,07"],[5,65,7,"04,04,08,05,03"],[6,61.5,3,"04,05,04,03,03"],[7,60,4,"04,08,09,04,03"]]},
+ {d:"22/11",r:1,dist:1500,cat:"C",h:[[1,57,7,"06,NP"],[2,57,5,"08,07"],[3,57,4,"09"],[4,56.5,1,"06,04,02"],[5,55.5,3,"11"],[6,55.5,2,"04"],[7,55.5,6,"09,06"],[8,55.5,9,"05,06"],[9,54,8,"NP"]]},
+ {d:"22/11",r:2,dist:1400,cat:"D",h:[[1,61,5,"12,07,07,05,05"],[2,60.5,10,"09,07,02,04,01"],[3,57.5,6,"01,02,02,08,09"],[4,59,4,"01,02,07,03,04"],[5,58.5,1,"01,02,04,07,06"],[6,58,3,"07,03,10,06,13"],[7,56.5,2,"17,11,07,01,08"],[8,55.5,7,"08,06,06,14"],[9,52.5,8,"13,08,04,01,04"],[10,52.5,9,"02,NP,03,03,06"]]},
+ {d:"22/11",r:3,dist:1800,cat:"D",h:[[1,63,14,"03,01,03,05,05"],[2,62,7,"03,03,03,02,04"],[3,61,9,"02,09,10,03,06"],[4,61.5,4,"02,04,NP,04,04"],[5,61,15,"NP,01,02,08,10"],[6,58.5,8,"03,07,09,01,02"],[7,59.5,11,"02,06,05,05,01"],[8,60,1,"03,04,15,06"],[9,59.5,10,"05,08,02,02,05"],[10,57.5,6,"06,03,08,03,03"],[11,55.5,16,"05,02,03,02,04"],[12,58.5,18,"11,02,07,01,03"],[13,58.5,2,"05,03,05,02,06"],[14,58,3,"07,07,07,04,04"],[15,56,17,"09,02,06,03,08"],[16,54,12,"05,05,01,02,04"],[17,56,19,"02,06,03,03,04"],[18,51,13,"11,04,02,08,02"],[19,52,20,"07,01,02,04,07"],[20,52,5,"04,03,04,04,04"]]},
+ {d:"22/11",r:4,dist:1800,cat:"D",h:[[1,62,2,"11,03,01,01,05"],[2,62.5,8,"04,09,07,07,01"],[3,62,4,"06,04,06,06,05"],[4,59.5,11,"01,02,07,05,04"],[5,58.5,9,"01,03,05,03,05"],[6,57.5,12,"NP,05,11,13,11"],[7,58,1,"04,03,04,04,04"],[8,57,7,"02,02,06,P,10"],[9,54,6,"04,01,02,03,02"],[10,55,3,"09,NP,04,01,04"],[11,52.5,10,"04,04,09,07,07"],[12,54,5,"01,01,02,06,04"]]},
+ {d:"22/11",r:5,dist:1400,cat:"A",h:[[1,63,6,"01,NP,NP,01,03"],[2,63,7,"01,08,03,06,08"],[3,63,9,"06,02,01,09,01"],[4,63,5,"01,01,06,08,03"],[5,63,8,"04,03,01,01,02"],[6,63,2,"03,04,01,02,02"],[7,63,11,"07,01,01,02,09"],[8,62.5,1,"04,01,01,01,02"],[9,62.5,4,"01,03,09,06,10"],[10,61.5,3,"02,03,03,05,03"],[11,53.5,10,"02,02,01,02,01"]]},
+ {d:"22/11",r:6,dist:2200,cat:"C",h:[[1,59.5,3,"02,06,02,06,04"],[2,59,1,"06,03,01,01,02"],[3,59,2,"04,04,05,01,04"],[4,58,5,"01,02,12,04,05"],[5,57,4,"10,05,03,06,NP"],[6,55.5,6,"04,06,05,04"]]}
+];
+if (typeof module!=="undefined") module.exports={BT};
+
+// Modelo de pronóstico La Zarzuela.
+// Cada factor se puntúa de 0 a 1 (0,5 = neutro), se combina con pesos y se convierte en probabilidad con softmax.
+const FPTS = {1:1,2:.72,3:.55,4:.42,5:.33,6:.25,7:.18,8:.13,9:.1};
+function posPts(p){ const s=String(p).trim(); if(/^(NP|P|C|Qdo|Ddo|Dto|Desc|TBE)$/i.test(s)) return .05; const n=parseInt(s,10); if(isNaN(n)) return .1; return FPTS[n] ?? .06; }
+const CAT = {A:4,FR:3,B:3,C:2,D:1};
+const TERR_NAMES = ["Bueno","Bueno a blando","Blando","Pesado"];
+const BASE_T = {bueno:0,bb:1,blando:2,pesado:3};
+// Tiempo en el momento de la carrera: cuánto ablanda la pista (acumulativo a lo largo de la jornada)
+const CIELO = {
+  sol:{label:"Soleado",d:-.1}, nubes:{label:"Nublado",d:0}, llovizna:{label:"Llovizna",d:.25},
+  lluvia:{label:"Lluvia",d:.6}, fuerte:{label:"Lluvia fuerte",d:1}
+};
+const DEF_W = {forma:30,distancia:15,jinete:15,preparador:15,peso:10,cajon:5,clase:10,terreno:5};
+const FNAMES = {forma:"Forma",distancia:"Distancia",jinete:"Jinete",preparador:"Preparador",peso:"Peso",cajon:"Cajón",clase:"Clase",terreno:"Terreno"};
+
+// Índice de terreno continuo 0 (bueno) – 3 (pesado) para la carrera n, según la base y el tiempo de esa carrera y las anteriores.
+function terrainFor(n, base, weather){
+  let t=BASE_T[base]??1;
+  for(let k=1;k<=n;k++){ const w=weather[k]; if(!w) continue; const c=CIELO[w.cielo]; if(!c) continue;
+    let d=c.d; if(w.cielo==="sol" && (w.temp??10)<14) d=-.03; // con frío el sol apenas seca
+    t+=d; }
+  return Math.max(0,Math.min(3,t));
+}
+const terrLabel=t=>TERR_NAMES[Math.round(t)];
+
+function buildStats(SR, onlyDates){
+  const J={},T={}; let tot=0,n=0; const pts=[1,.5,.3,.15,.08];
+  for(const r of SR){ if(onlyDates && !onlyDates.includes(r.d)) continue;
+    for(const [no,j,t] of r.p){ const i=r.arr.indexOf(no); const v=i>=0?pts[i]:0;
+      for(const [M,k,skip] of [[J,j,r.am||j==="AMATEUR"],[T,t,false]]){ if(skip) continue;
+        M[k]=M[k]||{rides:0,wins:0,top3:0,v:0}; M[k].rides++; M[k].v+=v; if(i===0)M[k].wins++; if(i>=0&&i<3)M[k].top3++; }
+      tot+=v;n++; } }
+  const mean=n?tot/n:.1, K=8;
+  for(const M of [J,T]){ for(const k in M){ const s=M[k]; s.shr=(s.v+K*mean)/(s.rides+K); }
+    const arr=Object.values(M).filter(s=>s.rides>=4).map(s=>s.shr).sort((a,b)=>a-b);
+    for(const k in M){ const s=M[k]; let c=0; for(const x of arr) if(x<s.shr) c++; s.pct=arr.length?(c+.5)/arr.length:.5; s.f=.15+.7*s.pct; } }
+  return {J,T,mean};
+}
+
+function scoreRace(race,stats,W,t,VIS,scratched){
+  const sc=scratched||new Set();
+  const H=race.horses.filter(h=>!sc.has(h.no)), N=race.horses.length;
+  if(!H.length) return [];
+  const meanKg=H.reduce((a,h)=>a+h.kg,0)/H.length;
+  const pesoM=1+.16*t, cajonM=1-.1*t, fondoM=1+.13*t;
+  const dStr=race.dist<=1400?.6:race.dist<=1600?.45:race.dist<=2000?.25:.05;
+  const anyForm=H.some(x=>x.form.length);
+  const out=H.map(h=>{
+    const f={}, why={};
+    if(h.form.length){ const ws=[1,.8,.6,.45,.35]; let s=0,ws_=0; h.form.slice(0,5).forEach((p,i)=>{s+=ws[i]*posPts(p);ws_+=ws[i];});
+      f.forma=Math.min(1,.08+s/ws_*1.05); why.forma=h.form.join("-"); }
+    else if(anyForm){ f.forma=.35; why.forma="debutante frente a caballos con experiencia"; }
+    else { f.forma=null; why.forma="debutante (todo el lote debuta)"; }
+    const runs=(h.runs||[]).filter(r=>!/^(NP|TBE)$/.test(String(r.pos)));
+    if(runs.length){ let s=0,ws_=0; for(const r of runs){ const sim=Math.exp(-Math.abs(r.dist-race.dist)/(.25*race.dist)); s+=sim*posPts(r.pos); ws_+=sim; }
+      const conf=Math.min(1,ws_), raw=Math.min(1,.1+s/ws_); let v=.5+(raw-.5)*conf;
+      if(race.dist>=3000 && Math.max(...runs.map(r=>r.dist))>=2800) v=.5+(v-.5)*fondoM;
+      f.distancia=Math.max(.05,Math.min(.95,v)); why.distancia=runs.map(r=>`${r.dist} m: ${r.pos}º`).join(", "); }
+    else { f.distancia=.5; why.distancia="sin carreras conocidas a distancia comparable"; }
+    if(VIS[h.j]!=null){ f.jinete=VIS[h.j]; why.jinete="jinete internacional (valor previo, sin montas en la muestra)"; }
+    else if(h.j==="AMATEUR"){ f.jinete=.3; why.jinete="amazona/gentleman"; }
+    else { const s=stats.J[h.j]; f.jinete=s?s.f:.4; why.jinete=s?`${s.wins} vict. / ${s.rides} montas (${s.top3} en podio)`:"sin montas en la muestra"; }
+    { const s=stats.T[h.t]; f.preparador=s?s.f:.4; why.preparador=s?`${s.wins} vict. / ${s.rides} salidas (${s.top3} en podio)`:"sin salidas en la muestra"; }
+    { const d=meanKg-h.kg; f.peso=Math.max(.05,Math.min(.95,.5+d*.07*pesoM*Math.sqrt(race.dist/1600)));
+      why.peso=`${String(h.kg).replace(".",",")} kg (${d>=0?"−":"+"}${Math.abs(d).toFixed(1).replace(".",",")} respecto a la media)`; }
+    { const rel=N>1?1-(h.draw-1)/(N-1):.5; f.cajon=.5+(rel-.5)*dStr*cajonM; why.cajon=`cajón ${h.draw} de ${N}`; }
+    if(runs.length){ const last=runs[0]; const dc=(CAT[last.cat]||2)-(CAT[race.cat]||2); f.clase=Math.max(.1,Math.min(.9,.5+.12*dc));
+      why.clase=dc>0?`baja de categoría (${last.cat==="FR"?"Francia":last.cat} → ${race.cat})`:dc<0?`sube de categoría (${last.cat} → ${race.cat})`:`misma categoría (${race.cat})`; }
+    else { f.clase=.5; why.clase="sin referencia"; }
+    { const gr=(h.runs||[]).filter(r=>r.g!=null);
+      if(gr.length){ let s=0; for(const r of gr) s+=(posPts(r.pos)-.35)*(r.g/3); s/=gr.length;
+        f.terreno=Math.max(.1,Math.min(.9,.5+s*1.6*(t/3)*2));
+        why.terreno=gr.map(r=>`${TERR_NAMES[r.g].toLowerCase()}: ${r.pos}º`).join(", ")+(t<.5?" (hoy pista buena: apenas cuenta)":""); }
+      else { f.terreno=.5; why.terreno="sin carreras con terreno conocido"; } }
+    let s=0,ws=0; const contrib={};
+    for(const k in W){ if(f[k]==null) continue; s+=W[k]*f[k]; ws+=W[k]; }
+    for(const k in W){ if(f[k]==null) continue; contrib[k]=ws?W[k]*(f[k]-.5)/ws:0; }
+    return {h,f,why,score:ws?s/ws:.5,contrib};
+  });
+  const T=4, mx=Math.max(...out.map(o=>o.score));
+  const ex=out.map(o=>Math.exp(T*(o.score-mx))), Z=ex.reduce((a,b)=>a+b,0);
+  out.forEach((o,i)=>{o.p=ex[i]/Z;});
+  // probabilidad de quedar entre los 3 primeros (Harville con descuento)
+  const pl=placeProbs(out.map(o=>o.p)); out.forEach((o,i)=>{o.p2=pl.top2[i]; o.p3=pl.top3[i];});
+  return out.sort((a,b)=>b.p-a.p);
+}
+
+// Harville con descuento (Henery/Lo): para 2º y 3º se aplanan las probabilidades (exponentes 0,81 y 0,65),
+// porque el Harville puro sobrevalora a los favoritos en los puestos.
+function norm(a){ const s=a.reduce((x,y)=>x+y,0); return a.map(x=>x/s); }
+function ordered(p){
+  const q2=norm(p.map(x=>Math.pow(x,.81))), q3=norm(p.map(x=>Math.pow(x,.65)));
+  return {
+    p12:(i,j)=>p[i]*q2[j]/(1-q2[i]),
+    p123:(i,j,k)=>p[i]*q2[j]/(1-q2[i])*q3[k]/(1-q3[i]-q3[j])
+  };
+}
+function placeProbs(p){
+  const n=p.length, O=ordered(p), top2=new Array(n).fill(0), top3=new Array(n).fill(0);
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){ if(i===j) continue; const a=O.p12(i,j); top2[i]+=a; top2[j]+=a;
+    for(let k=0;k<n;k++){ if(k===i||k===j) continue; const b=O.p123(i,j,k); top3[i]+=b; top3[j]+=b; top3[k]+=b; } }
+  return {top2,top3};
+}
+function combos(res,pv){
+  const p=pv||res.map(o=>o.p), n=p.length, O=ordered(p), gem=[], gemO=[], tri=[], triO=[];
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){ if(i===j) continue; const a=O.p12(i,j);
+    gemO.push({h:[res[i].h,res[j].h],p:a}); if(i<j) gem.push({h:[res[i].h,res[j].h],p:a+O.p12(j,i)});
+    for(let k=0;k<n;k++){ if(k===i||k===j) continue; triO.push({h:[res[i].h,res[j].h,res[k].h],p:O.p123(i,j,k)}); } }
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)for(let k=j+1;k<n;k++){ const per=[[i,j,k],[i,k,j],[j,i,k],[j,k,i],[k,i,j],[k,j,i]];
+    tri.push({h:[res[i].h,res[j].h,res[k].h],p:per.reduce((s,[a,b,c])=>s+O.p123(a,b,c),0)}); }
+  const srt=a=>a.sort((x,y)=>y.p-x.p);
+  return {gem:srt(gem),gemO:srt(gemO),tri:srt(tri),triO:srt(triO)};
+}
+
+// Valor frente a las cuotas de la casa (decimales).
+// Si hay cuota para todos los caballos activos, la probabilidad usada para apostar mezcla mercado y modelo
+// (mercado^0,65 × modelo^0,35, normalizado): el mercado suele ser el mejor predictor y el modelo corrige.
+const MARGIN=1.2;
+function blendProbs(res,odds){
+  if(!res.length || !res.every(o=>odds[o.h.no]>1)) return null;
+  const over=res.reduce((s,o)=>s+1/odds[o.h.no],0);
+  // método de potencia (k=1,15): corrige el sesgo favorito–sorpresa (las cuotas largas suelen pagar menos de lo justo)
+  const pm=norm(res.map(o=>Math.pow(1/odds[o.h.no],1.15)));
+  const pc=norm(res.map((o,i)=>Math.pow(pm[i],.65)*Math.pow(o.p,.35)));
+  return {pm,pc,over};
+}
+function value(res,odds){
+  const b=blendProbs(res,odds);
+  return res.map((o,i)=>{ const od=odds[o.h.no]; const fair=1/o.p, minOdd=fair*MARGIN;
+    if(!(od>1)) return {o,fair,minOdd};
+    const pm=b?b.pm[i]:1/od, pc=b?b.pc[i]:o.p, ev=pc*od-1, kelly=Math.max(0,(pc*od-1)/(od-1))*.25;
+    return {o,fair,minOdd,od,pm,pc,ev,kelly}; });
+}
+// Pick de riesgo: mayor valor esperado con cuota ≥ 5. Sin cuotas: el caballo con más probabilidad fuera de los 2 favoritos y cuota justa ≥ 5.
+function riskyPick(res,odds){
+  const v=value(res,odds); const c=v.filter(x=>x.od>=5 && x.ev>.05).sort((a,b)=>b.ev-a.ev);
+  if(c.length) return {mode:"cuotas",pick:c[0]};
+  if(v.some(x=>x.od)) return {mode:"sin-valor"};
+  const cand=v.slice(2).filter(x=>x.fair>=5).sort((a,b)=>b.o.p-a.o.p)[0];
+  return cand?{mode:"estimado",pick:cand}:{mode:"ninguno"};
+}
+
+// Validación con jornadas pasadas (sin mirar el resultado): estadística de jinetes y preparadores sólo con jornadas anteriores.
+function backtest(BT,SR,W){
+  const order=["01/11","08/11","15/11","22/11"]; const rows=[];
+  for(const b of BT){ const prev=order.slice(0,order.indexOf(b.d)); const st=buildStats(SR,prev);
+    const sr=SR.find(x=>x.d===b.d&&x.r===b.r);
+    const race={dist:b.dist,cat:b.cat,horses:b.h.map(([no,kg,draw,form])=>{const pp=sr.p.find(x=>x[0]===no);return {no,kg,draw,form:form?form.split(","):[],j:pp[1],t:pp[2],runs:[]};})};
+    const res=scoreRace(race,st,W,1,{},null); const win=sr.arr[0];
+    const rank=res.findIndex(o=>o.h.no===win)+1, pw=res.find(o=>o.h.no===win).p;
+    const top3=res.slice(0,3).map(o=>o.h.no); const realTop3=sr.arr.slice(0,3);
+    rows.push({d:b.d,r:b.r,n:race.horses.length,pick:res[0].h.no,win,rank,pw,unif:1/race.horses.length,
+      top3hit:top3.includes(win), placeHit:realTop3.includes(res[0].h.no)}); }
+  const n=rows.length;
+  return {rows,
+    winHit:rows.filter(r=>r.rank===1).length/n, top3:rows.filter(r=>r.top3hit).length/n,
+    placeHit:rows.filter(r=>r.placeHit).length/n,
+    unifWin:rows.reduce((s,r)=>s+r.unif,0)/n,
+    ll:rows.reduce((s,r)=>s-Math.log(r.pw),0)/n, llU:rows.reduce((s,r)=>s-Math.log(r.unif),0)/n};
+}
+if (typeof module!=="undefined") module.exports={blendProbs,buildStats,scoreRace,combos,value,riskyPick,backtest,terrainFor,terrLabel,DEF_W,FNAMES,CIELO,TERR_NAMES,BASE_T};
+
+{
+const CLOTH=["#d7262e","#ffffff","#1f4fd1","#f3c623","#178a3c","#111111","#f07d14","#f08fb6","#1fb5b0","#6b2fa3","#8a8f94","#a8d42a"];
+const CTXT=["#fff","#111","#fff","#111","#fff","#f3c623","#111","#111","#111","#fff","#fff","#111"];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct=p=>(p*100).toFixed(1).replace(".",",")+" %";
+const dec=x=>x.toFixed(1).replace(".",",");
+const STATS=buildStats(STATS_RACES);
+const KEY="hz-29-11-2026";
+let S={w:{...DEF_W},base:"bb",weather:{},scr:{},odds:{},cur:1,bank:100};
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null"); if(s) S={...S,...s,w:{...DEF_W,...(s.w||{})}};}catch(e){}
+let open=new Set();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+const cloth=n=>`<span class="cloth" style="background:${CLOTH[(n-1)%12]};color:${CTXT[(n-1)%12]}">${n}</span>`;
+const tname=t=>t.toLowerCase().replace(/(^|[ .])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase()).replace(/\.(?=\p{L})/gu,". ");
+const scrSet=n=>new Set(S.scr[n]||[]);
+const oddsOf=n=>S.odds[n]||{};
+const tOf=n=>terrainFor(n,S.base,S.weather);
+function calc(r){ const res=scoreRace(r,STATS,S.w,tOf(r.n),VISITORS,scrSet(r.n)); const odds=oddsOf(r.n);
+  const b=blendProbs(res,odds); const val=value(res,odds); res.forEach((o,i)=>o.pw=b?b.pc[i]:o.p);
+  return {res,odds,b,ranked:[...res].sort((x,y)=>y.pw-x.pw),cmb:combos(res,b?b.pc:null),val,risk:riskyPick(res,odds)}; }
+const names=hs=>hs.map(h=>`<span style="display:inline-flex;gap:4px;align-items:center">${cloth(h.no)}</span>`).join(" ");
+function tabs(){document.getElementById("tabs").innerHTML=RACES.map(r=>{const sc=scrSet(r.n).size;return `<button class="tab" role="tab" id="t${r.n}" aria-selected="${r.n===S.cur}" data-n="${r.n}"><b>${r.n}ª · ${r.hora}${sc?` · ${sc} baja${sc>1?"s":""}`:""}</b><small>${r.dist.toLocaleString("es-ES")} m · ${esc(r.name.replace("Premio ",""))}</small></button>`}).join("");}
+function race(){
+  const r=RACES.find(x=>x.n===S.cur), {res,odds,b,ranked,cmb,val,risk}=calc(r), t=tOf(r.n), sc=scrSet(r.n), mx=Math.max(...res.map(o=>o.p),.01);
+  const w=S.weather[r.n]||{cielo:"",temp:""};
+  const byNo=Object.fromEntries(res.map(o=>[o.h.no,o]));
+  const lanes=`<div class="tlab"><span>Por nº de mantilla · probabilidad de ganar</span><span>Meta →</span></div>`+r.horses.map(h=>{const o=byNo[h.no];
+    return o?`<div class="lane"><span class="lname">${esc(h.name)}</span><div class="run"><div class="bar" style="width:${Math.max(6,o.p/mx*70)}%"><i></i>${cloth(h.no)}<span class="lpct">${pct(o.p)}</span></div></div></div>`
+    :`<div class="lane out"><span class="lname">${esc(h.name)}</span><div class="run"><span class="lpct" style="left:8px">retirado</span></div></div>`}).join("");
+  const vmap=Object.fromEntries(val.map(v=>[v.o.h.no,v]));
+  const rows=res.map((o,i)=>{const h=o.h, v=vmap[h.no], isO=open.has(h.no);
+    const fac=Object.keys(FNAMES).map(k=>{const x=o.f[k]; if(x==null) return `<span>${FNAMES[k]}</span><div class="fbar"></div><span class="small">n/d</span><span class="why">${esc(o.why[k])}</span>`;
+      const left=Math.min(x,.5)*100, wd=Math.abs(x-.5)*100, col=x>=.5?"var(--turf)":"var(--acc)";
+      return `<span>${FNAMES[k]}</span><div class="fbar"><span style="left:${left}%;width:${wd}%;background:${col}"></span><span style="left:50%;width:2px;background:var(--mut)"></span></div><span class="small">${(x*100).toFixed(0)}</span><span class="why">${esc(o.why[k])}${S.w[k]?"":" · peso 0"}</span>`}).join("");
+    const runs=(h.runs||[]).map(x=>`<li>${esc(x.d)} · ${esc(x.txt)} · ${x.dist.toLocaleString("es-ES")} m · ${x.cat==="FR"?"Francia":"cat. "+esc(x.cat)} · <b>${esc(x.pos)}º</b>${x.of?" de "+x.of:""}${x.kg?" · "+String(x.kg).replace(".",",")+" kg":""}</li>`).join("");
+    const evc=v.ev==null?"":`<span class="ev ${v.ev>0?"pos":"neg"}">${v.ev>0?"+":""}${(v.ev*100).toFixed(0)} %</span>`;
+    return `<tr class="row" tabindex="0" data-no="${h.no}" aria-expanded="${isO}"><td class="n">${i+1}</td><td><span style="display:flex;gap:8px;align-items:center">${cloth(h.no)}<span><span class="hn">${esc(h.name)}</span> <span class="small">${esc(h.eq||"")}</span><br><span class="small">${h.age} años · ${esc(h.c)}</span></span></span></td><td>${esc(h.jn)}<br><span class="small">${esc(tname(h.t))}</span></td><td class="n">${h.draw}</td><td class="n">${String(h.kg).replace(".",",")}</td><td class="fm">${h.form.length?esc(h.form.join("-")):"debuta"}</td><td class="n"><b>${pct(o.p)}</b><br><span class="small">podio ${pct(o.p3)}</span></td><td class="n">${dec(v.fair)}<br><span class="small">valor ≥ ${dec(v.minOdd)}</span></td><td class="n"><input class="odd" type="number" inputmode="decimal" step="0.1" min="1" id="od-${r.n}-${h.no}" data-no="${h.no}" value="${odds[h.no]??""}" placeholder="cuota" aria-label="Cuota de ${esc(h.name)}"></td><td class="n">${evc}</td></tr>`+
+    (isO?`<tr class="det"><td colspan="10">${h.note?`<p style="margin:0 0 10px"><b>${esc(h.note)}</b></p>`:""}<div class="fac">${fac}</div>${runs?`<ul class="runs">${runs}</ul>`:`<p class="small" style="margin:10px 0 0">Sin carreras reconstruidas en detalle (sin historial encontrado fuera de España).</p>`}</td></tr>`:"");}).join("");
+  const sl=Object.keys(FNAMES).map(k=>`<label class="sl" for="w-${k}"><span>${FNAMES[k]}</span><input type="range" id="w-${k}" data-k="${k}" min="0" max="50" value="${S.w[k]}"><span class="n">${S.w[k]}</span></label>`).join("");
+  const scr=r.horses.map(h=>`<button class="scr" data-scr="${h.no}" aria-pressed="${sc.has(h.no)}">${cloth(h.no)}${esc(h.name.replace(/ \(.*\)/,""))}</button>`).join("");
+  const cielo=Object.entries(CIELO).map(([k,c])=>`<option value="${k}" ${w.cielo===k?"selected":""}>${c.label}</option>`).join("");
+  const P=b?"combinada mercado + modelo":"del modelo";
+  const fav=ranked[0], plc=[...res].sort((a,b2)=>b2.p3-a.p3)[0];
+  const li=(arr,ord)=>arr.slice(0,4).map(c=>`<li><span class="k">${c.h.map(h=>cloth(h.no)).join(ord?" → ":" ")}</span> ${pct(c.p)} · cuota mín. ${dec(MARGIN/c.p)}</li>`).join("");
+  let riskHtml="";
+  if(risk.mode==="cuotas"){const k=risk.pick; const st=S.bank*k.kelly;
+    riskHtml=`<div class="k">${cloth(k.o.h.no)}<b>${esc(k.o.h.name)}</b> a ${dec(k.od)}</div><p style="margin:4px 0">Probabilidad ${P}: ${pct(k.pc)} frente a ${pct(k.pm)} que marca la cuota. Valor esperado <b>+${(k.ev*100).toFixed(0)} %</b>.</p><p class="small" style="margin:0">¼ de Kelly con banca de ${S.bank} €: ${st.toFixed(2).replace(".",",")} €. Gemela arriesgada: ${cloth(k.o.h.no)} con ${cloth(fav.h.no)}.</p>`;}
+  else if(risk.mode==="sin-valor") riskHtml=`<p style="margin:4px 0">Con las cuotas escritas no hay ningún caballo de cuota ≥ 5 con valor. Mejor no forzar la apuesta.</p>`;
+  else if(risk.mode==="estimado"){const k=risk.pick; riskHtml=`<div class="k">${cloth(k.o.h.no)}<b>${esc(k.o.h.name)}</b></div><p style="margin:4px 0">Tercer escalón del modelo (${pct(k.o.p)}, podio ${pct(k.o.p3)}). Sólo tiene valor si la cuota de la casa es <b>${dec(k.minOdd)} o más</b>. Escribe las cuotas para confirmarlo.</p><p class="small" style="margin:0">Gemela arriesgada: ${cloth(k.o.h.no)} con ${cloth(fav.h.no)}, cuota mínima ${dec(MARGIN/(cmb.gem.find(g=>g.h.some(x=>x.no===k.o.h.no)&&g.h.some(x=>x.no===fav.h.no))?.p||1))}.</p>`;}
+  else riskHtml=`<p style="margin:4px 0">No hay candidato claro.</p>`;
+  document.getElementById("race").innerHTML=`<div class="rhead"><div><h2>${r.n}ª · ${esc(r.name)}</h2><div class="sub">${esc(r.sub)}</div></div><div class="chips"><span class="chip">${r.dist.toLocaleString("es-ES")} m</span><span class="chip">${r.hora} h</span><span class="chip">${esc(r.premio)}</span><span class="chip">${res.length} de ${r.horses.length} corren</span><span class="chip ${t>=2?"hot":""}">Pista: ${esc(terrLabel(t))} (${dec(t)})</span></div></div>
+  <div class="live"><div><h3>Tiempo ahora</h3><div class="hrow"><label class="sel" for="cielo">Cielo <select id="cielo"><option value="">— sin dato —</option>${cielo}</select></label><label class="sel" for="temp">°C <input type="number" id="temp" inputmode="numeric" style="width:84px" value="${w.temp??""}"></label></div><p class="small" style="margin:8px 0 0">La lluvia ablanda la pista para esta carrera y las siguientes.</p></div>
+  <div><h3>Bajas de última hora</h3><div class="hrow">${scr}</div><p class="small" style="margin:8px 0 0">Pulsa un caballo para retirarlo; las probabilidades se recalculan.</p></div></div>
+  <div class="track" role="img" aria-label="Probabilidad de victoria por caballo">${lanes}</div>
+  <div class="bets">
+   <div class="bet"><h3>Ganador</h3><div class="k">${cloth(fav.h.no)}<b>${esc(fav.h.name)}</b></div><div class="big">${pct(fav.pw)}</div><p class="small" style="margin:0">Cuota mínima con valor: ${dec(MARGIN/fav.pw)}</p></div>
+   <div class="bet"><h3>Colocado</h3><div class="k">${cloth(plc.h.no)}<b>${esc(plc.h.name)}</b></div><div class="big">${pct(plc.p3)}</div><p class="small" style="margin:0">Probabilidad de acabar entre los 3 primeros.</p></div>
+   <div class="bet"><h3>Gemela</h3><p class="small" style="margin:0">Los dos primeros, en cualquier orden</p><ol>${li(cmb.gem)}</ol><p class="small" style="margin:6px 0 0">Ordenada: ${cmb.gemO.slice(0,2).map(c=>c.h.map(h=>h.no).join("→")+" "+pct(c.p)).join(" · ")}</p></div>
+   <div class="bet"><h3>Trío</h3><p class="small" style="margin:0">Los tres primeros, en cualquier orden</p><ol>${li(cmb.tri)}</ol><p class="small" style="margin:6px 0 0">Ordenado: ${cmb.triO.slice(0,2).map(c=>c.h.map(h=>h.no).join("→")+" "+pct(c.p)).join(" · ")}</p></div>
+   <div class="bet risk"><h3>Apuesta arriesgada</h3>${riskHtml}</div>
+  </div>
+  <div class="grid2"><div><div class="scroll"><table class="stack"><thead><tr><th class="n">#</th><th>Caballo</th><th>Jinete / preparador</th><th class="n">Cajón</th><th class="n">Kg</th><th>Forma</th><th class="n">Prob.</th><th class="n">Cuota justa</th><th class="n">Cuota casa</th><th class="n">Valor</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <p class="small">Pulsa un caballo para ver el desglose y sus carreras anteriores. Valor = probabilidad ${P} × cuota − 1.</p></div>
+  <aside><div class="box"><h3>Pesos del modelo</h3><p class="small" style="margin:0 0 6px">Se aplican a todas las carreras.</p><div class="sls">${sl}
+  <label class="sl" for="bank" style="margin-top:10px"><span>Banca €</span><input type="number" id="bank" min="1" value="${S.bank}" style="width:100%"><span></span></label></div>
+  <div class="hrow" style="margin-top:10px"><button class="btn" id="reset">Restablecer pesos</button><button class="btn" id="clearRace">Limpiar esta carrera</button></div></div></aside></div>`;
+}
+function sum(){
+  document.getElementById("sum").innerHTML=RACES.map(r=>{const {ranked,b,cmb,risk}=calc(r);
+    return `<div class="scard"><h3>${r.n}ª · ${r.hora} · ${r.dist.toLocaleString("es-ES")} m</h3><div class="small">${esc(r.name)} · pista ${esc(terrLabel(tOf(r.n)).toLowerCase())}</div>${ranked.slice(0,3).map((o,i)=>`<div class="pick">${cloth(o.h.no)}<span style="flex:1">${i===0?"<b>":""}${esc(o.h.name)}${i===0?"</b>":""}</span><span class="cond" style="font-size:18px">${pct(o.pw)}</span></div>`).join("")}
+    <p class="small" style="margin:8px 0 0">Gemela ${cmb.gem[0].h.map(h=>h.no).join("-")} · Trío ${cmb.tri[0].h.map(h=>h.no).join("-")}${risk.pick?` · Riesgo: ${risk.pick.o.h.no}`:""}</p></div>`}).join("");
+}
+function bt(){ const x=backtest(BT,STATS_RACES,S.w);
+  document.getElementById("bt").innerHTML=`<div class="scroll"><table><thead><tr><th>Jornada</th><th class="n">Carrera</th><th class="n">Pick</th><th class="n">Ganó</th><th class="n">Puesto del ganador en el modelo</th><th class="n">Prob. dada al ganador</th></tr></thead><tbody>${x.rows.map(r=>`<tr><td>${r.d}</td><td class="n">${r.r}ª</td><td class="n">${r.pick}</td><td class="n">${r.win}</td><td class="n">${r.rank}º de ${r.n}</td><td class="n">${pct(r.pw)}</td></tr>`).join("")}</tbody></table></div>
+  <p>Acierto del ganador: <b>${(x.winHit*100).toFixed(0)} %</b> (al azar ${(x.unifWin*100).toFixed(0)} %). El ganador estaba entre los 3 primeros del modelo en el <b>${(x.top3*100).toFixed(0)} %</b> de las carreras y el primer pick acabó en el podio en el <b>${(x.placeHit*100).toFixed(0)} %</b>. Pérdida logarítmica ${x.ll.toFixed(3).replace(".",",")} frente a ${x.llU.toFixed(3).replace(".",",")} al azar (menos es mejor).</p>`;}
+function all(){tabs();race();sum();bt();}
+document.getElementById("base").value=S.base;
+document.addEventListener("click",e=>{const t=e.target.closest(".tab"); if(t){S.cur=+t.dataset.n; open.clear(); save(); all(); return;}
+  const s=e.target.closest("[data-scr]"); if(s){const n=S.cur, no=+s.dataset.scr, set=scrSet(n); set.has(no)?set.delete(no):set.add(no); S.scr[n]=[...set]; save(); tabs(); race(); sum(); document.querySelector(`[data-scr="${no}"]`)?.focus(); return;}
+  if(e.target.closest("input,select")) return;
+  const r=e.target.closest("tr.row"); if(r){const n=+r.dataset.no; open.has(n)?open.delete(n):open.add(n); race(); document.querySelector(`tr.row[data-no="${n}"]`)?.focus(); return;}
+  if(e.target.id==="reset"){S.w={...DEF_W}; save(); race(); sum(); bt();}
+  if(e.target.id==="clearRace"){delete S.weather[S.cur]; delete S.scr[S.cur]; delete S.odds[S.cur]; save(); all();}
+  if(e.target.id==="resetAll"){const ok=document.getElementById("resetAll"); if(ok.dataset.c){S.weather={};S.scr={};S.odds={};delete ok.dataset.c;ok.textContent="Borrar datos del día";save();all();} else {ok.dataset.c=1;ok.textContent="Pulsa otra vez para confirmar";}}
+});
+document.addEventListener("keydown",e=>{const r=e.target.closest&&e.target.closest("tr.row"); if(r&&e.target===r&&(e.key==="Enter"||e.key===" ")){e.preventDefault(); r.click();}
+  const t=e.target.closest&&e.target.closest(".tab"); if(t&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){S.cur=((S.cur-1+(e.key==="ArrowRight"?1:5))%6)+1; open.clear(); save(); all(); document.getElementById("t"+S.cur).focus();}});
+document.addEventListener("input",e=>{const el=e.target;
+  if(el.dataset&&el.dataset.k){S.w[el.dataset.k]=+el.value; el.nextElementSibling.textContent=el.value; save(); const id=el.id; race(); sum(); bt(); document.getElementById(id)?.focus(); return;}
+  if(el.id==="bank"){const v=parseFloat(el.value); if(v>0){S.bank=v; save();} return;}});
+document.addEventListener("change",e=>{const el=e.target, n=S.cur;
+  if(el.id==="base"){S.base=el.value; save(); all(); return;}
+  if(el.id==="cielo"||el.id==="temp"){const w=S.weather[n]||{}; if(el.id==="cielo") w.cielo=el.value; else w.temp=el.value===""?"":+el.value; S.weather[n]=w; save(); race(); sum(); document.getElementById(el.id)?.focus(); return;}
+  if(el.id==="bank"){race(); return;}
+  if(el.classList.contains("odd")){const o=S.odds[n]||{}, v=parseFloat(String(el.value).replace(",",".")); if(v>1) o[el.dataset.no]=v; else delete o[el.dataset.no]; S.odds[n]=o; save(); const id=el.id; race(); sum(); document.getElementById(id)?.focus();}
+});
+all();
+}
+</script>
+</body>
+</html>
