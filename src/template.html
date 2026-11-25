@@ -162,19 +162,20 @@ const pct=p=>(p*100).toFixed(1).replace(".",",")+" %";
 const dec=x=>x.toFixed(1).replace(".",",");
 const STATS=buildStats(TRAIN);
 // Carreras previas de cada caballo del domingo: las reconstruidas a mano (incluido el extranjero) + las de las jornadas cargadas
-const {REF_DATE:FECHA,WIN_FROM:DESDE}=getWin(), DDMM=FECHA.slice(8,10)+"/"+FECHA.slice(5,7), DESDE_DM=DESDE.slice(8,10)+"/"+DESDE.slice(5,7);
+const {REF_DATE:FECHA,WIN_FROM:DESDE}=getWin(), DDMM=FECHA.slice(8,10)+"/"+FECHA.slice(5,7), DESDE_DM=DESDE.slice(8,10)+"/"+DESDE.slice(5,7)+"/"+DESDE.slice(2,4);
 const GROUPS=meetingGroups(TRAIN,RUNS_EXTRA,RACES);
 const RACESX=RACES.map(r=>({...r,date:FECHA,rival:rivalCtx(GROUPS,r,FECHA),horses:r.horses.map(h=>{const man=h.runs||[]; const au=autoRuns(h.name,TRAIN,JOR.length,JOR).filter(a=>!man.some(m=>m.d===a.d));
-  const hist=buildHist(h,TRAIN,JOR,RUNS_EXTRA,getWin().WIN_FROM,5); let lastOld=h.lastOld;
+  const hist10=buildHist(h,TRAIN,JOR,RUNS_EXTRA,getWin().WIN_FROM,10), hist=hist10.slice(0,5); let lastOld=h.lastOld; // el modelo usa 5; se enseñan hasta 10
   if(!hist.length&&!lastOld){ const ds=[...man,...au].map(m=>isoOf(m.d)).filter(Boolean).sort(); if(ds.length){ const x=ds.pop(); lastOld=x.slice(8,10)+"/"+x.slice(5,7); } }
   const older=[...man,...au].filter(m=>{const i=isoOf(m.d); return !i||i<DESDE;});
-  return {...h,hist,lastOld,older,runs:[...man,...au]};})}));
+  return {...h,hist,hist10,lastOld,older,runs:[...man,...au]};})}));
 // ---------- Carreras anteriores por distancia ----------
 // Todas las actuaciones conocidas de cada caballo (jornadas, otros hipódromos, historial manual) y todas las montas de cada jinete en las jornadas.
 const RUNS_BY_H={}, RIDES_BY_J={};
-for(const g of GROUPS) for(const e of g.ent) (RUNS_BY_H[e.name]=RUNS_BY_H[e.name]||[]).push({date:g.date,course:g.course,dist:g.dist,cat:g.cat,g:g.g,of:g.of||null,pos:e.pos,out:e.out,kg:e.kg,j:e.j});
+for(const g of GROUPS) for(const e of g.ent) if(g.date>=DESDE) (RUNS_BY_H[e.name]=RUNS_BY_H[e.name]||[]).push({date:g.date,course:g.course,dist:g.dist,cat:g.cat,g:g.g,of:g.of||null,pos:e.pos,out:e.out,kg:e.kg,j:e.j});
 for(const r of RACES) for(const h of r.horses){ const k=normName(h.name), L=RUNS_BY_H[k]=RUNS_BY_H[k]||[];
-  for(const m of (h.runs||[])) if(!isoOf(m.d)&&m.dist) L.push({date:null,dlabel:String(m.d),course:courseOf(m),dist:m.dist,cat:m.cat,g:m.g??null,of:m.of,pos:typeof m.pos==="number"?m.pos:parseInt(m.pos,10)||null,out:false,kg:m.kg}); }
+  for(const m of (h.runs||[])) if(!isoOf(m.d)&&m.dist&&String(m.d)>=DESDE.slice(0,4)) L.push({date:null,dlabel:String(m.d),course:courseOf(m),dist:m.dist,cat:m.cat,g:m.g??null,of:m.of,pos:typeof m.pos==="number"?m.pos:parseInt(m.pos,10)||null,out:false,kg:m.kg}); }
+for(const k in RUNS_BY_H) RUNS_BY_H[k]=RUNS_BY_H[k].sort((a,b)=>(b.date||b.dlabel||"")<(a.date||a.dlabel||"")?-1:1).slice(0,10); // último año, hasta 10 por caballo
 const JN={}; for(const r of RACES) for(const h of r.horses) JN[h.j]=h.jn.replace(/\s*\(.*\)$/,"");
 for(const r of TRAIN){ const date=isoOf(r.d); for(const h of r.h){ const i=r.arr.indexOf(h.no);
   (RIDES_BY_J[h.j]=RIDES_BY_J[h.j]||[]).push({date,dist:r.dist,cat:r.cat,r:r.r,horse:h.name,pos:i>=0?i+1:null,out:i<0,of:r.h.length,kg:h.kg,g:(GEN.GOING||{})[date]??null,t:h.t}); } }
@@ -202,7 +203,7 @@ function dhist(){ const D=dRange(), lo=Math.min(D.min,D.max), hi=Math.max(D.min,
   document.getElementById("dHist").innerHTML=`<div class="dh">
 <h3>Caballos (${nH} con carreras entre ${rng})</h3>${nH?`<div class="scroll"><table><thead><tr><th>Caballo</th><th class="n">Fecha</th><th>Hipódromo</th><th class="n">Distancia</th><th>Categoría</th><th>Terreno</th><th class="n">Puesto</th><th class="n">Peso</th><th>Jinete</th></tr></thead>${hb}</table></div>`:`<p class="small">Ningún caballo tiene carreras conocidas en ese rango.</p>`}
 <h3>Jinetes (${nJ} con montas entre ${rng})</h3>${nJ?`<div class="scroll"><table><thead><tr><th>Jinete</th><th class="n">Fecha</th><th class="n">Carrera</th><th>Categoría</th><th>Caballo</th><th class="n">Puesto</th><th class="n">Peso</th><th>Terreno</th><th>Preparador</th></tr></thead>${jb}</table></div>`:`<p class="small">Ningún jinete tiene montas en ese rango en las jornadas cargadas.</p>`}
-<p class="small">Caballos: todas las carreras conocidas (jornadas de La Zarzuela desde el ${JOR[0]}, San Sebastián, Francia y el historial reconstruido a mano). Jinetes: montas en las jornadas de La Zarzuela cargadas (${JOR[0]}–${JOR.at(-1)}); de fuera no tenemos el jinete. «6º o peor»: la llegada oficial solo da los 5 primeros. Categorías por importe del primer premio: Listed internacional ≥ 50.000 €, Listed local 35.000–49.999 €, A 24.000–34.999 €, B 15.000–23.999 €, C 8.000–14.999 €, D 3.500–7.999 €; «Francia»: carrera francesa, sin categoría española. Terreno «—»: no se conoce. De las jornadas de La Zarzuela no hay parte de pista publicado; se apunta en <code>datos/terreno.csv</code> (con <code>cerrar_jornada.py --terreno</code>), así que de momento el filtro de terreno solo encuentra carreras de fuera (San Sebastián, Francia) y las que se vayan anotando.</p></div>`;
+<p class="small">Caballos: sus últimas carreras conocidas del último año (hasta 10 por caballo) (jornadas de La Zarzuela desde el ${JOR[0]}, San Sebastián, Francia y el historial reconstruido a mano). Jinetes: montas en las jornadas de La Zarzuela cargadas (${JOR[0]}–${JOR.at(-1)}); de fuera no tenemos el jinete. «6º o peor»: la llegada oficial solo da los 5 primeros. Categorías por importe del primer premio: Listed internacional ≥ 50.000 €, Listed local 35.000–49.999 €, A 24.000–34.999 €, B 15.000–23.999 €, C 8.000–14.999 €, D 3.500–7.999 €; «Francia»: carrera francesa, sin categoría española. Terreno «—»: no se conoce. De las jornadas de La Zarzuela no hay parte de pista publicado; se apunta en <code>datos/terreno.csv</code> (con <code>cerrar_jornada.py --terreno</code>), así que de momento el filtro de terreno solo encuentra carreras de fuera (San Sebastián, Francia) y las que se vayan anotando.</p></div>`;
 }
 const PRESETS=[{id:"final",label:`Entrenados para el ${DDMM}`,W:TRAINED.final.W,T:TRAINED.final.T},{id:"def",label:"Por defecto (sin entrenar)",W:DEF_W,T:DEF_T},
   ...TRAINED.rows.filter(r=>r.d!==DDMM).map(r=>({id:r.d,label:`Entrenados para el ${r.d}`,W:r.W,T:r.T}))];
@@ -241,13 +242,13 @@ function race(){
       const left=Math.min(x,.5)*100, wd=Math.abs(x-.5)*100, col=x>=.5?"var(--turf)":"var(--acc)";
       return `<span>${FNAMES[k]}</span><div class="fbar"><span style="left:${left}%;width:${wd}%;background:${col}"></span><span style="left:50%;width:2px;background:var(--mut)"></span></div><span class="small">${(x*100).toFixed(0)}</span><span class="why">${esc(o.why[k])}${S.w[k]?"":" · peso 0"}</span>`}).join("");
     const li=x=>`<li>${esc(x.d)}${x.course?" · "+esc(x.course):""}${(()=>{const t=(x.auto||/^La Zarzuela, \d/.test(x.txt||""))?"":(x.txt||"").replace(/ \((San Sebastián|Francia)[^)]*\)/,"").replace(/^San Sebastián( \(.*\))?$/,"").trim(); return t?" · "+esc(t):"";})()}${x.dist?" · "+x.dist.toLocaleString("es-ES")+" m":""}${x.cat&&x.cat!=="FR"?" · <b>"+esc(catShort(x.cat))+"</b>":x.cat==="FR"?"":" · cat. ?"} · <b>${esc(x.pos)}º</b>${x.of?" de "+x.of:""}${x.g!=null?" · "+GOING[x.g]:""}${x.kg?" · "+String(x.kg).replace(".",",")+" kg":""}</li>`;
-    const hl=(h.hist||[]).map(li).join(""), ol=(h.older||[]).map(li).join("");
+    const hl=(h.hist10||h.hist||[]).map((x,i)=>li(x).replace("<li>",i<5?"<li>":`<li style="opacity:.75">`).replace("</li>",i<5?" · <span class=\"small\">cuenta</span></li>":"</li>")).join(""), ol=(h.older||[]).map(li).join("");
     const ps=e=>e.pos!=null?`${e.pos}º`:e.out?"6º o peor":"?", kgs=e=>e.kg?` (${String(e.kg).replace(".",",")} kg)`:"";
     const hh=h2h(GROUPS,h.name,r.horses.filter(x=>x!==h&&!sc.has(x.no)).map(x=>x.name),FECHA).map(m=>{
       const rv=r.horses.find(x=>normName(x.name)===m.rv.name), tag=m.res===true?`<b style="color:var(--turf)">por delante</b>`:m.res===false?`<b style="color:var(--acc)">por detrás</b>`:"sin orden claro";
       return `<li>${m.date.slice(8,10)}/${m.date.slice(5,7)} · ${esc(m.course)}${m.dist?" · "+m.dist.toLocaleString("es-ES")+" m":""} · <b>${esc(catShort(m.cat))}</b>${m.g!=null?" · "+GOING[m.g]:""}${m.of?" · "+m.of+" corredores":""}: ${ps(m.me)}${kgs(m.me)} ${tag} de ${rv?cloth(rv.no)+" ":""}${esc(rv?rv.name:m.rv.disp)} ${ps(m.rv)}${kgs(m.rv)}</li>`;}).join("");
     const rivHtml=`<p class="small" style="margin:10px 0 4px"><b>Enfrentamientos directos con los rivales de hoy</b> (últimos ~6 meses)</p>`+(hh?`<ul class="runs" style="margin-top:0">${hh}</ul>`:`<p class="small" style="margin:0">Ninguno. El factor «Rivales» sale de rivales cruzados (a quién ganó y a quién ganaron esos), si los hay.</p>`);
-    const runs=rivHtml+`<p class="small" style="margin:10px 0 4px"><b>Últimas carreras en los últimos 12 meses (desde el ${DESDE_DM}, cualquier hipódromo) — son las que cuentan para forma y distancia</b></p>`+
+    const runs=rivHtml+`<p class="small" style="margin:10px 0 4px"><b>Últimas carreras en los últimos 12 meses (desde el ${DESDE_DM}, cualquier hipódromo), hasta 10</b> — las 5 más recientes («cuenta») son las que usa el modelo para forma y distancia</p>`+
       (hl?`<ul class="runs" style="margin-top:0">${hl}</ul>`:`<p class="small" style="margin:0">${h.lastOld?`Ninguna: no corre desde el ${esc(h.lastOld)}.`:h.form.length?`No encontradas con fecha; se usa la forma del programa (${esc(h.form.join("-"))}) con la mitad de peso.`:"Debutante."}</p>`)+
       (ol?`<p class="small" style="margin:10px 0 4px">Anteriores o sin fecha (solo para terreno y como referencia)</p><ul class="runs" style="margin-top:0">${ol}</ul>`:"");
     const evc=v.ev==null?"":`<span class="ev ${v.ev>0?"pos":"neg"}">${v.ev>0?"+":""}${(v.ev*100).toFixed(0)} %</span>`;
