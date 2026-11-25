@@ -46,7 +46,27 @@ function autoRuns(name, train, beforeIdx, J){
   return out.sort((a,b)=>b.idx-a.idx);
 }
 
-function features(race,stats,t,VIS,scratched){
+// ---------- Lo que va de día ----------
+// A partir de las llegadas ya introducidas hoy: puntos de cada jinete/preparador frente a lo esperado
+// (1º=1, 2º=0,5, 3º=0,3, 4º=0,15, 5º=0,08; esperado = 1,98/participantes) y sesgo de cajón en carreras de hasta 2.000 m.
+const DPTS=[1,.5,.3,.15,.08];
+function dayContext(races,results,scratched,beforeN){
+  const jk={},tr={}; let bS=0,bN=0; const done=[];
+  for(const r of races){ if(r.n>=beforeN) continue; const arr=results[r.n]; if(!arr||!arr.length) continue;
+    const sc=new Set(scratched[r.n]||[]); const H=r.horses.filter(h=>!sc.has(h.no)), n=H.length, N=r.horses.length;
+    done.push({n:r.n,arr,h:H});
+    for(const h of H){ const pos=arr.indexOf(h.no), v=pos>=0&&pos<5?DPTS[pos]:0, e=1.98/n;
+      for(const [M,k,lab] of [[jk,h.j,h.jn],[tr,h.t,h.t]]){ if(k==="AMATEUR") continue; M[k]=M[k]||{d:0,rides:0,wins:0,places:0,lab}; const s=M[k]; s.d+=v-e; s.rides++; if(pos===0) s.wins++; if(pos>=0&&pos<3) s.places++; } }
+    if(r.dist<=2000 && N>3) for(const no of arr.slice(0,3)){ const h=r.horses.find(x=>x.no===no); if(h){ bS+=(1-(h.draw-1)/(N-1))-.5; bN++; } } }
+  return {jk,tr,bias:bN?bS/bN:0,biasN:bN,done};
+}
+// Carreras de hoy ya corridas, en el formato de entrenamiento (para sumar a la estadística de la temporada)
+function todayAsTrain(races,results,scratched,beforeN){
+  return races.filter(r=>r.n<beforeN && results[r.n]&&results[r.n].length).map(r=>{ const sc=new Set(scratched[r.n]||[]);
+    return {d:"29/11",r:r.n,dist:r.dist,cat:r.cat,am:false,arr:results[r.n],h:r.horses.filter(h=>!sc.has(h.no)).map(h=>({no:h.no,name:h.name,kg:h.kg,draw:h.draw,j:h.j,t:h.t,form:h.form}))}; });
+}
+
+function features(race,stats,t,VIS,scratched,ctx,dayW){
   const sc=scratched||new Set();
   const H=race.horses.filter(h=>!sc.has(h.no)), N=race.horses.length;
   const meanKg=H.reduce((a,h)=>a+h.kg,0)/Math.max(1,H.length);
@@ -69,9 +89,15 @@ function features(race,stats,t,VIS,scratched){
     else if(h.j==="AMATEUR"){ f.jinete=.3; why.jinete="amazona/gentleman"; }
     else { const s=stats.J[h.j]; f.jinete=s?s.f:.4; why.jinete=s?`${s.wins} vict. / ${s.rides} montas (${s.top3} en podio)`:"sin montas en la muestra"; }
     { const s=stats.T[h.t]; f.preparador=s?s.f:.4; why.preparador=s?`${s.wins} vict. / ${s.rides} salidas (${s.top3} en podio)`:"sin salidas en la muestra"; }
+    if(ctx){ const dw=dayW||0;
+      for(const [k,M,key] of [["jinete",ctx.jk,h.j],["preparador",ctx.tr,h.t]]){ const s=M[key]; if(!s) continue;
+        f[k]=Math.max(.05,Math.min(.95,f[k]+dw*Math.max(-.15,Math.min(.15,.08*s.d))));
+        why[k]+=` · hoy: ${s.wins} vict., ${s.places} en podio en ${s.rides} ${k==="jinete"?"montas":"salidas"}${dw?"":" (efecto del día desactivado)"}`; } }
     { const d=meanKg-h.kg; f.peso=Math.max(.05,Math.min(.95,.5+d*.07*pesoM*Math.sqrt(race.dist/1600)));
       why.peso=`${String(h.kg).replace(".",",")} kg (${d>=0?"−":"+"}${Math.abs(d).toFixed(1).replace(".",",")} respecto a la media)`; }
-    { const rel=N>1?1-(h.draw-1)/(N-1):.5; f.cajon=.5+(rel-.5)*dStr*cajonM; why.cajon=`cajón ${h.draw} de ${N}`; }
+    { const rel=N>1?1-(h.draw-1)/(N-1):.5; let bias=0;
+      if(ctx&&ctx.biasN&&race.dist<=2000) bias=(dayW||0)*ctx.bias*ctx.biasN/(ctx.biasN+6)*1.2;
+      f.cajon=Math.max(.05,Math.min(.95,.5+(rel-.5)*(dStr*cajonM+bias))); why.cajon=`cajón ${h.draw} de ${N}`+(ctx&&ctx.biasN&&race.dist<=2000?` · hoy los 3 primeros salieron ${ctx.bias>.05?"más por dentro":ctx.bias<-.05?"más por fuera":"repartidos"}`:""); }
     if(runs.length){ const last=runs[0]; const dc=(CAT[last.cat]||2)-(CAT[race.cat]||2); f.clase=Math.max(.1,Math.min(.9,.5+.12*dc));
       why.clase=dc>0?`baja de categoría (${last.cat==="FR"?"Francia":last.cat} → ${race.cat})`:dc<0?`sube de categoría (${last.cat} → ${race.cat})`:`misma categoría (${race.cat})`; }
     else { f.clase=.5; why.clase="sin referencia"; }
@@ -84,8 +110,8 @@ function features(race,stats,t,VIS,scratched){
   });
 }
 function softmax(scores,T){ const mx=Math.max(...scores); const ex=scores.map(s=>Math.exp(T*(s-mx))); const Z=ex.reduce((a,b)=>a+b,0); return ex.map(e=>e/Z); }
-function scoreRace(race,stats,W,t,VIS,scratched,T){
-  const out=features(race,stats,t,VIS,scratched); if(!out.length) return [];
+function scoreRace(race,stats,W,t,VIS,scratched,T,ctx,dayW){
+  const out=features(race,stats,t,VIS,scratched,ctx,dayW); if(!out.length) return [];
   const ws=FKEYS.reduce((a,k)=>a+(W[k]||0),0)||1;
   for(const o of out){ o.score=FKEYS.reduce((a,k)=>a+(W[k]||0)*o.f[k],0)/ws; o.contrib={}; for(const k of FKEYS) o.contrib[k]=(W[k]||0)*(o.f[k]-.5)/ws; }
   const p=softmax(out.map(o=>o.score),T??DEF_T); out.forEach((o,i)=>o.p=p[i]);
@@ -193,4 +219,4 @@ function evalRaces(prepared,W,T){
     hit+=gt===0?1/eq:0; t3+=Math.max(0,Math.min(eq,3-gt))/eq; n++; }
   return {n,ll:ll/n,llU:llU/n,hit:hit/n,t3:t3/n};
 }
-if (typeof module!=="undefined") module.exports={posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};
+if (typeof module!=="undefined") module.exports={dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};

@@ -38,8 +38,8 @@ label.sel{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .rhead h2{font-size:clamp(28px,3.6vw,40px);margin:0;line-height:1.05}.sub{color:var(--mut)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}.chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px;white-space:nowrap;font-size:15px}
 .chip.hot{background:var(--acc);border-color:var(--acc);color:#fff}
-.live{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
-@media(max-width:760px){.live{grid-template-columns:minmax(0,1fr)}}
+.live{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr) minmax(0,.8fr);gap:16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:16px}
+@media(max-width:900px){.live{grid-template-columns:minmax(0,1fr)}}
 .live h3{margin:0 0 8px;font-size:20px}.hrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .scr{min-height:40px;padding:4px 10px 4px 4px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;display:flex;gap:6px;align-items:center;font-size:15px}
 .scr[aria-pressed=true]{background:var(--soft);text-decoration:line-through;color:var(--mut)}
@@ -117,6 +117,11 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 <p>Ahora cada carrera se simula 20.000 veces. Cada caballo tiene un nivel medio y una <b>regularidad</b> sacada de sus últimos puestos: un caballo de 3-2-2-1-2 corre casi siempre igual, y uno de 1-9-1-NP-8 a veces gana y a veces se hunde. Los niveles se ajustan para que las victorias simuladas coincidan con las probabilidades del modelo, y las gemelas y tríos salen de contar las llegadas simuladas. Así un caballo regular que rara vez gana puede aparecer en las mejores gemelas por delante de un favorito irregular.</p>
 <p id="cmpTxt"></p>
 <p class="note">Con 37 carreras de prueba, la simulación y Harville quedan prácticamente empatadas: la idea es más realista, pero todavía no está demostrado que acierte más. Ningún sistema garantiza un ROI positivo: apuesta sólo lo que puedas permitirte perder.</p>
+<h2 class="cond" style="margin-top:28px">Lo que va de día</h2>
+<p>Al terminar cada carrera escribe la llegada (por ejemplo 9-11-6). Las carreras siguientes la usan de dos formas:</p>
+<ul><li><b>Siempre</b>: se suma a la estadística de la temporada de jinetes y preparadores (son datos nuevos, como una carrera más).</li>
+<li><b>Sólo si subes el deslizador «Efecto del día»</b>: el jinete o la cuadra que van por encima de lo esperado hoy suben hasta 0,15 puntos en su factor, y si los primeros están saliendo por dentro o por fuera se refuerza o se invierte la ventaja del cajón.</li></ul>
+<p>Lo he probado en las 37 carreras del 18/10 al 22/11, usando en cada carrera sólo lo que había pasado antes ese mismo día. Dar ventaja al jinete «en racha» empeoró la predicción (pérdida 2,341 frente a 2,311 sin efecto), igual que a la cuadra (2,345). Con el sesgo de cajón del día pasó lo contrario de lo esperado: los cajones que habían ido bien tendieron a ir peor después, casi seguro por casualidad. Por eso el efecto empieza a 0: la información se ve, pero no cambia las probabilidades salvo que tú lo decidas.</p>
 <h2 class="cond" style="margin-top:28px">Resto del modelo</h2>
 <ol>
 <li><b>Forma</b>: últimas cinco actuaciones del programa oficial; la más reciente pesa más.</li>
@@ -147,8 +152,8 @@ const STATS=buildStats(TRAIN);
 const RACESX=RACES.map(r=>({...r,horses:r.horses.map(h=>{const man=h.runs||[]; const au=autoRuns(h.name,TRAIN,7,JOR).filter(a=>!man.some(m=>m.d===a.d)); return {...h,runs:[...man,...au]};})}));
 const PRESETS=[{id:"final",label:"Entrenados para el 29/11",W:TRAINED.final.W,T:TRAINED.final.T},{id:"def",label:"Por defecto (sin entrenar)",W:DEF_W,T:DEF_T},
   ...TRAINED.rows.filter(r=>r.d!=="29/11").map(r=>({id:r.d,label:`Entrenados para el ${r.d}`,W:r.W,T:r.T}))];
-const KEY="hz-29-11-2026-v3";
-let S={w:{...TRAINED.final.W},T:TRAINED.final.T,preset:"final",base:"bb",weather:{},scr:{},odds:{},cur:1,bank:100};
+const KEY="hz-29-11-2026-v4";
+let S={w:{...TRAINED.final.W},T:TRAINED.final.T,preset:"final",base:"bb",weather:{},scr:{},odds:{},res:{},dayW:0,cur:1,bank:100};
 try{const s=JSON.parse(localStorage.getItem(KEY)||"null"); if(s) S={...S,...s,w:{...S.w,...(s.w||{})}};}catch(e){}
 let open=new Set();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
@@ -159,14 +164,18 @@ const oddsOf=n=>S.odds[n]||{};
 const tOf=n=>terrainFor(n,S.base,S.weather);
 const regLabel=s=>s<1.05?"muy regular":s<1.25?"regular":s<1.4?"irregular":"muy irregular";
 const cache=new Map();
-function calc(r,nSim){ const ck=JSON.stringify([r.n,S.w,S.T,tOf(r.n),S.scr[r.n],S.odds[r.n],nSim]); if(cache.has(ck)) return cache.get(ck);
-  const res=scoreRace(r,STATS,S.w,tOf(r.n),VISITORS,scrSet(r.n),S.T); const odds=oddsOf(r.n);
+const statsCache=new Map();
+function statsFor(n){ const today=todayAsTrain(RACESX,S.res,S.scr,n); const k=JSON.stringify(today.map(x=>[x.r,x.arr,x.h.length])); if(!today.length) return STATS;
+  if(!statsCache.has(k)) statsCache.set(k,buildStats(TRAIN.concat(today))); return statsCache.get(k); }
+function calc(r,nSim){ const ck=JSON.stringify([r.n,S.w,S.T,tOf(r.n),S.scr,S.odds[r.n],S.res,S.dayW,nSim]); if(cache.has(ck)) return cache.get(ck);
+  const ctx=dayContext(RACESX,S.res,S.scr,r.n);
+  const res=scoreRace(r,statsFor(r.n),S.w,tOf(r.n),VISITORS,scrSet(r.n),S.T,ctx,S.dayW); const odds=oddsOf(r.n);
   const b=blendProbs(res,odds); const val=value(res,odds); res.forEach((o,i)=>o.pw=b?b.pc[i]:o.p);
   const sim=simulate(res,b?b.pc:null,nSim,r.n*97+7); res.forEach((o,i)=>{o.p3=sim.top3[i]; o.sig=sim.sig[i];});
-  const out={res,odds,b,ranked:[...res].sort((x,y)=>y.pw-x.pw),sim,val,risk:riskyPick(res,odds)}; cache.set(ck,out); if(cache.size>60) cache.delete(cache.keys().next().value); return out; }
-function tabs(){document.getElementById("tabs").innerHTML=RACESX.map(r=>{const sc=scrSet(r.n).size;return `<button class="tab" role="tab" id="t${r.n}" aria-selected="${r.n===S.cur}" data-n="${r.n}"><b>${r.n}ª · ${r.hora}${sc?` · ${sc} baja${sc>1?"s":""}`:""}</b><small>${r.dist.toLocaleString("es-ES")} m · ${esc(r.name.replace("Premio ",""))}</small></button>`}).join("");}
+  const out={res,odds,b,ctx,ranked:[...res].sort((x,y)=>y.pw-x.pw),sim,val,risk:riskyPick(res,odds)}; cache.set(ck,out); if(cache.size>60) cache.delete(cache.keys().next().value); return out; }
+function tabs(){document.getElementById("tabs").innerHTML=RACESX.map(r=>{const sc=scrSet(r.n).size;return `<button class="tab" role="tab" id="t${r.n}" aria-selected="${r.n===S.cur}" data-n="${r.n}"><b>${r.n}ª · ${r.hora}${sc?` · ${sc} baja${sc>1?"s":""}`:""}${S.res[r.n]?" · ✓":""}</b><small>${r.dist.toLocaleString("es-ES")} m · ${esc(r.name.replace("Premio ",""))}</small></button>`}).join("");}
 function race(){
-  const r=RACESX.find(x=>x.n===S.cur), {res,odds,b,ranked,sim,val,risk}=calc(r,20000), t=tOf(r.n), sc=scrSet(r.n), mx=Math.max(...res.map(o=>o.p),.01);
+  const r=RACESX.find(x=>x.n===S.cur), {res,odds,b,ctx,ranked,sim,val,risk}=calc(r,20000), t=tOf(r.n), sc=scrSet(r.n), mx=Math.max(...res.map(o=>o.p),.01);
   const w=S.weather[r.n]||{cielo:"",temp:""};
   const byNo=Object.fromEntries(res.map(o=>[o.h.no,o]));
   const lanes=`<div class="tlab"><span>Por nº de mantilla · probabilidad de ganar</span><span>Meta →</span></div>`+r.horses.map(h=>{const o=byNo[h.no];
@@ -198,7 +207,8 @@ function race(){
   else riskHtml=`<p style="margin:4px 0">No hay candidato claro.</p>`;
   document.getElementById("race").innerHTML=`<div class="rhead"><div><h2>${r.n}ª · ${esc(r.name)}</h2><div class="sub">${esc(r.sub)}</div></div><div class="chips"><span class="chip">${r.dist.toLocaleString("es-ES")} m</span><span class="chip">${r.hora} h</span><span class="chip">${esc(r.premio)}</span><span class="chip">${res.length} de ${r.horses.length} corren</span><span class="chip ${t>=2?"hot":""}">Pista: ${esc(terrLabel(t))} (${dec(t)})</span></div></div>
   <div class="live"><div><h3>Tiempo ahora</h3><div class="hrow"><label class="sel" for="cielo">Cielo <select id="cielo"><option value="">— sin dato —</option>${cielo}</select></label><label class="sel" for="temp">°C <input type="number" id="temp" inputmode="numeric" style="width:84px" value="${w.temp??""}"></label></div><p class="small" style="margin:8px 0 0">La lluvia ablanda la pista para esta carrera y las siguientes.</p></div>
-  <div><h3>Bajas de última hora</h3><div class="hrow">${scr}</div><p class="small" style="margin:8px 0 0">Pulsa un caballo para retirarlo; todo se recalcula.</p></div></div>
+  <div><h3>Bajas de última hora</h3><div class="hrow">${scr}</div><p class="small" style="margin:8px 0 0">Pulsa un caballo para retirarlo; todo se recalcula.</p></div>
+  <div><h3>Llegada</h3><label class="sel" for="llegada">Nº en orden <input type="text" id="llegada" inputmode="numeric" placeholder="ej. 9-11-6" style="width:130px;min-height:44px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)" value="${(S.res[r.n]||[]).join("-")}"></label><p class="small" style="margin:8px 0 0" id="llegMsg">${resMsg(r,res)}</p></div></div>
   <div class="track" role="img" aria-label="Probabilidad de victoria por caballo">${lanes}</div>
   <div class="bets">
    <div class="bet"><h3>Ganador</h3><div class="k">${cloth(fav.h.no)}<b>${esc(fav.h.name)}</b></div><div class="big">${pct(fav.pw)}</div><p class="small" style="margin:0">Cuota mínima con valor: ${dec(MARGIN/fav.pw)}</p></div>
@@ -206,17 +216,27 @@ function race(){
    <div class="bet"><h3>Gemela</h3><p class="small" style="margin:0">Los dos primeros, en cualquier orden</p><ol>${li(sim.gem)}</ol><p class="small" style="margin:6px 0 0">Ordenada: ${sim.gemO.slice(0,2).map(c=>c.h.map(h=>h.no).join("→")+" "+pct(c.p)).join(" · ")}</p></div>
    <div class="bet"><h3>Trío</h3><p class="small" style="margin:0">Los tres primeros, en cualquier orden</p><ol>${li(sim.tri)}</ol><p class="small" style="margin:6px 0 0">Ordenado: ${sim.triO.slice(0,2).map(c=>c.h.map(h=>h.no).join("→")+" "+pct(c.p)).join(" · ")}</p></div>
    <div class="bet risk"><h3>Apuesta arriesgada</h3>${riskHtml}</div>
-  </div>
+  </div>${dayHtml(r,ctx,res)}
   <div class="grid2"><div><div class="scroll"><table class="stack"><thead><tr><th class="n">#</th><th>Caballo</th><th>Jinete / preparador</th><th class="n">Cajón</th><th class="n">Kg</th><th>Forma</th><th class="n">Prob.</th><th class="n">Cuota justa</th><th class="n">Cuota casa</th><th class="n">Valor</th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="small">Pulsa un caballo para ver el desglose y sus carreras anteriores. Valor = probabilidad ${P} × cuota − 1.</p></div>
   <div class="box"><h3>Pesos del modelo</h3><div class="hrow" style="margin:4px 0 8px"><label class="sel" for="preset">Juego de pesos <select id="preset">${presetOpts}</select></label><span class="small">Temperatura ${dec(S.T)} · se aplican a todas las carreras</span></div><div class="sls">${sl}
+  <label class="sl" for="dayW"><span>Efecto del día</span><input type="range" id="dayW" min="0" max="100" value="${Math.round(S.dayW*100)}"><span class="n">${Math.round(S.dayW*100)}</span></label>
   <label class="sl" for="bank"><span>Banca €</span><input type="number" id="bank" min="1" value="${S.bank}" style="width:100%"><span></span></label></div>
   <div class="hrow" style="margin-top:10px"><button class="btn" id="clearRace">Limpiar esta carrera</button></div></div></div>`;
 }
+function resMsg(r,res){ const a=S.res[r.n]; if(!a) return "Escríbela al acabar: las carreras siguientes la usan."; const i=res.findIndex(o=>o.h.no===a[0]);
+  return i<0?"El ganador no está entre los participantes.":`El modelo daba al ganador ${pct(res[i].p)} (su ${i+1}º).`; }
+function dayHtml(r,ctx,res){ if(!ctx.done.length) return `<p class="small" style="margin:14px 0 0">Lo que va de día: aún no hay llegadas introducidas antes de esta carrera.</p>`;
+  const here=new Set(res.map(o=>o.h.j)); const jk=Object.entries(ctx.jk).filter(([,s])=>s.rides).sort((a,b)=>b[1].d-a[1].d);
+  const rowsJ=jk.slice(0,8).map(([k,s])=>`<tr><td>${esc(s.lab||k)}${here.has(k)?" ·  <b>monta aquí</b>":""}</td><td class="n">${s.rides}</td><td class="n">${s.wins}</td><td class="n">${s.places}</td><td class="n">${s.d>=0?"+":""}${s.d.toFixed(2).replace(".",",")}</td></tr>`).join("");
+  let hits=0; for(const d of ctx.done){ const rr=RACESX.find(x=>x.n===d.n); const c=calc(rr,6000); if(c.ranked[0].h.no===d.arr[0]) hits++; }
+  const bias=ctx.biasN?`Los tres primeros de hoy (hasta 2.000 m) salieron ${ctx.bias>.05?"<b>más por dentro</b>":ctx.bias<-.05?"<b>más por fuera</b>":"repartidos"} (índice ${ctx.bias.toFixed(2).replace(".",",")}, ${ctx.biasN} caballos).`:"";
+  return `<div class="box" style="margin-top:18px"><h3>Lo que va de día</h3><p class="small" style="margin:0 0 8px">${ctx.done.length} carrera${ctx.done.length>1?"s":""} con llegada · el favorito del modelo ganó ${hits}. ${bias} ${S.dayW?`Efecto del día al ${Math.round(S.dayW*100)} %.`:"El efecto del día está a 0: se muestra, pero no cambia las probabilidades (sube el deslizador «Efecto del día» si quieres que cuente)."}</p>
+  <div class="scroll"><table><thead><tr><th>Jinete</th><th class="n">Montas</th><th class="n">Vict.</th><th class="n">Podios</th><th class="n">Sobre lo esperado</th></tr></thead><tbody>${rowsJ}</tbody></table></div></div>`; }
 function sum(){
   document.getElementById("sum").innerHTML=RACESX.map(r=>{const {ranked,sim,risk}=calc(r,20000);
     return `<div class="scard"><h3>${r.n}ª · ${r.hora} · ${r.dist.toLocaleString("es-ES")} m</h3><div class="small">${esc(r.name)} · pista ${esc(terrLabel(tOf(r.n)).toLowerCase())}</div>${ranked.slice(0,3).map((o,i)=>`<div class="pick">${cloth(o.h.no)}<span style="flex:1">${i===0?"<b>":""}${esc(o.h.name)}${i===0?"</b>":""}</span><span class="cond" style="font-size:18px">${pct(o.pw)}</span></div>`).join("")}
-    <p class="small" style="margin:8px 0 0">Gemela ${sim.gem[0].h.map(h=>h.no).join("-")} · Trío ${sim.tri[0].h.map(h=>h.no).join("-")}${risk.pick?` · Riesgo: ${risk.pick.o.h.no}`:""}</p></div>`}).join("");
+    <p class="small" style="margin:8px 0 0">Gemela ${sim.gem[0].h.map(h=>h.no).join("-")} · Trío ${sim.tri[0].h.map(h=>h.no).join("-")}${risk.pick?` · Riesgo: ${risk.pick.o.h.no}`:""}</p>${S.res[r.n]?`<p style="margin:6px 0 0"><b>Llegada ${S.res[r.n].join("-")}</b> · ${ranked[0].h.no===S.res[r.n][0]?"acertó el favorito del modelo":"el modelo tenía al ganador "+(ranked.findIndex(o=>o.h.no===S.res[r.n][0])+1)+"º"}</p>`:""}</div>`}).join("");
 }
 function wf(){
   const ks=FKEYS;
@@ -232,8 +252,8 @@ document.addEventListener("click",e=>{const t=e.target.closest(".tab"); if(t){S.
   const s=e.target.closest("[data-scr]"); if(s){const n=S.cur, no=+s.dataset.scr, set=scrSet(n); set.has(no)?set.delete(no):set.add(no); S.scr[n]=[...set]; save(); tabs(); race(); sum(); document.querySelector(`[data-scr="${no}"]`)?.focus(); return;}
   if(e.target.closest("input,select")) return;
   const r=e.target.closest("tr.row"); if(r){const n=+r.dataset.no; open.has(n)?open.delete(n):open.add(n); race(); document.querySelector(`tr.row[data-no="${n}"]`)?.focus(); return;}
-  if(e.target.id==="clearRace"){delete S.weather[S.cur]; delete S.scr[S.cur]; delete S.odds[S.cur]; save(); all();}
-  if(e.target.id==="resetAll"){const ok=document.getElementById("resetAll"); if(ok.dataset.c){S.weather={};S.scr={};S.odds={};delete ok.dataset.c;ok.textContent="Borrar datos del día";save();all();} else {ok.dataset.c=1;ok.textContent="Pulsa otra vez para confirmar";}}
+  if(e.target.id==="clearRace"){delete S.weather[S.cur]; delete S.scr[S.cur]; delete S.odds[S.cur]; delete S.res[S.cur]; save(); all();}
+  if(e.target.id==="resetAll"){const ok=document.getElementById("resetAll"); if(ok.dataset.c){S.weather={};S.scr={};S.odds={};S.res={};delete ok.dataset.c;ok.textContent="Borrar datos del día";save();all();} else {ok.dataset.c=1;ok.textContent="Pulsa otra vez para confirmar";}}
 });
 document.addEventListener("keydown",e=>{const r=e.target.closest&&e.target.closest("tr.row"); if(r&&e.target===r&&(e.key==="Enter"||e.key===" ")){e.preventDefault(); r.click();}
   const t=e.target.closest&&e.target.closest(".tab"); if(t&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){S.cur=((S.cur-1+(e.key==="ArrowRight"?1:5))%6)+1; open.clear(); save(); all(); document.getElementById("t"+S.cur).focus();}});
@@ -241,12 +261,17 @@ let raf=0;
 document.addEventListener("input",e=>{const el=e.target;
   if(el.dataset&&el.dataset.k){S.w[el.dataset.k]=+el.value; S.preset="custom"; el.nextElementSibling.textContent=el.value; save(); const id=el.id;
     cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{race(); sum(); document.getElementById(id)?.focus();}); return;}
-  if(el.id==="bank"){const v=parseFloat(el.value); if(v>0){S.bank=v; save();} return;}});
+  if(el.id==="bank"){const v=parseFloat(el.value); if(v>0){S.bank=v; save();} return;}
+  if(el.id==="dayW"){S.dayW=+el.value/100; el.nextElementSibling.textContent=el.value; save(); cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{race(); sum(); document.getElementById("dayW")?.focus();}); return;}});
 document.addEventListener("change",e=>{const el=e.target, n=S.cur;
   if(el.id==="base"){S.base=el.value; save(); all(); return;}
   if(el.id==="preset"){const p=PRESETS.find(x=>x.id===el.value); if(p){S.w={...p.W}; S.T=p.T;} S.preset=el.value; save(); race(); sum(); document.getElementById("preset")?.focus(); return;}
   if(el.id==="cielo"||el.id==="temp"){const w=S.weather[n]||{}; if(el.id==="cielo") w.cielo=el.value; else w.temp=el.value===""?"":+el.value; S.weather[n]=w; save(); race(); sum(); document.getElementById(el.id)?.focus(); return;}
   if(el.id==="bank"){race(); return;}
+  if(el.id==="llegada"){const r=RACESX.find(x=>x.n===n), valid=new Set(r.horses.filter(h=>!scrSet(n).has(h.no)).map(h=>h.no));
+    const a=String(el.value).split(/[^0-9]+/).filter(Boolean).map(Number); const uniq=[...new Set(a)];
+    if(!a.length){delete S.res[n];} else if(uniq.length!==a.length||a.some(x=>!valid.has(x))){document.getElementById("llegMsg").textContent="Revisa los números: deben ser participantes (no retirados) y sin repetir."; return;} else S.res[n]=a.slice(0,5);
+    save(); tabs(); race(); sum(); document.getElementById("llegada")?.focus(); return;}
   if(el.classList.contains("odd")){const o=S.odds[n]||{}, v=parseFloat(String(el.value).replace(",",".")); if(v>1) o[el.dataset.no]=v; else delete o[el.dataset.no]; S.odds[n]=o; save(); const id=el.id; race(); sum(); document.getElementById(id)?.focus();}
 });
 all(); wf();
