@@ -91,7 +91,7 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 </style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack tr.row td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head><body>
 <header class="band"><div class="wrap">
 <h1>La Zarzuela, domingo 29 de noviembre: pronóstico en directo</h1>
-<p>Modelo con los participantes definitivos y su historial en España y Francia. El domingo, en cada carrera, indica el tiempo que hace, marca las bajas de última hora y escribe las cuotas: el pronóstico, las gemelas, los tríos y la apuesta de valor se recalculan al momento.</p>
+<p>Modelo entrenado con las jornadas de otoño desde la 6ª (11 de octubre) y con el historial de cada caballo en España y Francia. El domingo, en cada carrera, indica el tiempo que hace, marca las bajas de última hora y escribe las cuotas: el pronóstico, las gemelas, los tríos y la apuesta de valor se recalculan al momento.</p>
 <div class="meta">
 <span>Primera carrera 11:30 · hierba</span><span>Previsión al 25/11: seco, 4–14 °C</span>
 <label class="sel" for="base">Pista al empezar la jornada
@@ -105,41 +105,51 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 <h2 class="cond" style="font-size:32px;margin:0 0 12px">Resumen de la jornada</h2>
 <div class="sum" id="sum"></div>
 </div></section>
-<section class="band" style="background:var(--card);border-top:1px solid var(--line)"><div class="wrap prose">
-<h2 class="cond">¿Funciona? Validación con el 15 y el 22 de noviembre</h2>
-<p>He pasado el modelo por las 12 carreras de esas dos jornadas usando sólo lo que se sabía antes de correrlas (estadística de jinetes y preparadores de las jornadas anteriores) y lo he comparado con el resultado real.</p>
-<div id="bt"></div>
-<p class="note">Con 12 carreras la muestra es mínima y el modelo apenas mejora a elegir al azar en probabilidad. Por eso la apuesta de valor sólo se activa cuando escribes cuotas reales y mezcla esa información de mercado con el modelo. Ningún sistema garantiza un ROI positivo: apuesta sólo lo que puedas permitirte perder.</p>
+<section class="band" style="background:var(--card);border-top:1px solid var(--line)"><div class="wrap">
+<div class="prose"><h2 class="cond">Pesos entrenados jornada a jornada</h2>
+<p>Para cada jornada, desde la 7ª hasta la de este domingo, los pesos se han entrenado con todas las jornadas anteriores desde la 6ª (11/10) y se han probado en esa jornada sin haberla visto. Los pesos del 29/11 usan las 43 carreras del 11/10 al 22/11. El terreno no se entrena porque no hay parte oficial del estado de la pista de esas jornadas.</p></div>
+<div id="wf"></div>
+<div class="prose" id="wfsum"></div>
 </div></section>
 <section class="band"><div class="wrap prose">
-<h2 class="cond">Cómo funciona</h2>
+<h2 class="cond">Cómo se calculan las gemelas y los tríos</h2>
+<p>La versión anterior usaba la fórmula de Harville: la probabilidad de que <i>j</i> sea 2º si gana <i>i</i> se reparte en proporción a la fuerza de cada caballo. No es independencia, pero sí supone que el orden de los puestos sólo depende de la probabilidad de ganar, y por eso las gemelas favoritas salían casi siempre de los dos favoritos.</p>
+<p>Ahora cada carrera se simula 20.000 veces. Cada caballo tiene un nivel medio y una <b>regularidad</b> sacada de sus últimos puestos: un caballo de 3-2-2-1-2 corre casi siempre igual, y uno de 1-9-1-NP-8 a veces gana y a veces se hunde. Los niveles se ajustan para que las victorias simuladas coincidan con las probabilidades del modelo, y las gemelas y tríos salen de contar las llegadas simuladas. Así un caballo regular que rara vez gana puede aparecer en las mejores gemelas por delante de un favorito irregular.</p>
+<p id="cmpTxt"></p>
+<p class="note">Con 37 carreras de prueba, la simulación y Harville quedan prácticamente empatadas: la idea es más realista, pero todavía no está demostrado que acierte más. Ningún sistema garantiza un ROI positivo: apuesta sólo lo que puedas permitirte perder.</p>
+<h2 class="cond" style="margin-top:28px">Resto del modelo</h2>
 <ol>
 <li><b>Forma</b>: últimas cinco actuaciones del programa oficial; la más reciente pesa más.</li>
-<li><b>Distancia y clase</b>: carreras conocidas en La Zarzuela, San Sebastián y Francia, ponderadas por lo cerca que están de la distancia de hoy y por su categoría.</li>
-<li><b>Terreno</b>: puestos conseguidos en pista blanda o muy blanda (sobre todo en Francia). Cuenta más cuanto más blanda esté la pista hoy.</li>
-<li><b>Jinete y preparador</b>: 24 carreras de noviembre, suavizadas hacia la media.</li>
-<li><b>Peso y cajón</b>: kilos respecto a la media (más importantes con distancia y barro) y ligera ventaja a la cuerda en 1.400–1.600 m.</li>
+<li><b>Distancia y clase</b>: carreras conocidas en La Zarzuela (desde el 11/10), San Sebastián y Francia, ponderadas por su distancia y su categoría. La clase es el factor con más señal en los datos.</li>
+<li><b>Terreno</b>: puestos en pista blanda o muy blanda. Cuenta más cuanto más blanda esté la pista hoy.</li>
+<li><b>Jinete y preparador</b>: 43 carreras desde el 11/10, suavizadas hacia la media.</li>
+<li><b>Peso y cajón</b>: kilos respecto a la media y ligera ventaja a la cuerda en 1.400–1.600 m.</li>
 <li><b>Tiempo en directo</b>: la lluvia ablanda la pista para esa carrera y las siguientes (llovizna +¼ de grado, lluvia +⅗, fuerte +1); el sol con más de 14 °C la seca un poco.</li>
-<li><b>Gemelas y tríos</b>: fórmula de Harville con descuento para el 2º y 3º puesto, que evita sobrevalorar a los favoritos.</li>
 <li><b>Valor</b>: con cuotas, la probabilidad para apostar es mercado<sup>0,65</sup> × modelo<sup>0,35</sup>, corrigiendo el sesgo de las cuotas largas. Hay valor si probabilidad × cuota &gt; 1. El importe sugerido es ¼ de Kelly sobre tu banca.</li>
 </ol>
-<p class="small">Fuentes: participantes definitivos del 29/11/2026 y de las jornadas del 1, 8, 15 y 22/11 (hipodromodelazarzuela.es); programa Quíntuple Plus nº 70 (loteriasyapuestas.es); historiales en turf-fr.com, turfoo.fr y skysports.com. Datos recogidos el 25/11/2026. Para muchos caballos con experiencia sólo en España no he encontrado historial en el extranjero.</p>
+<p class="small">Fuentes: participantes definitivos y llegadas de las jornadas del 11/10 al 29/11/2026 (hipodromodelazarzuela.es), programa Quíntuple Plus nº 70 (loteriasyapuestas.es), historiales en turf-fr.com, turfoo.fr y skysports.com. Datos recogidos el 25/11/2026.</p>
 </div></section>
 </main>
 <script>
 /*DATA*/
-/*BTDATA*/
+/*TRAIN*/
+/*WEIGHTS*/
 /*MODEL*/
 {
 const CLOTH=["#d7262e","#ffffff","#1f4fd1","#f3c623","#178a3c","#111111","#f07d14","#f08fb6","#1fb5b0","#6b2fa3","#8a8f94","#a8d42a"];
 const CTXT=["#fff","#111","#fff","#111","#fff","#f3c623","#111","#111","#111","#fff","#fff","#111"];
+const JOR=["11/10","18/10","25/10","01/11","08/11","15/11","22/11"];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pct=p=>(p*100).toFixed(1).replace(".",",")+" %";
 const dec=x=>x.toFixed(1).replace(".",",");
-const STATS=buildStats(STATS_RACES);
-const KEY="hz-29-11-2026";
-let S={w:{...DEF_W},base:"bb",weather:{},scr:{},odds:{},cur:1,bank:100};
-try{const s=JSON.parse(localStorage.getItem(KEY)||"null"); if(s) S={...S,...s,w:{...DEF_W,...(s.w||{})}};}catch(e){}
+const STATS=buildStats(TRAIN);
+// Carreras previas de cada caballo del domingo: las reconstruidas a mano (incluido el extranjero) + las de La Zarzuela desde el 11/10
+const RACESX=RACES.map(r=>({...r,horses:r.horses.map(h=>{const man=h.runs||[]; const au=autoRuns(h.name,TRAIN,7,JOR).filter(a=>!man.some(m=>m.d===a.d)); return {...h,runs:[...man,...au]};})}));
+const PRESETS=[{id:"final",label:"Entrenados para el 29/11",W:TRAINED.final.W,T:TRAINED.final.T},{id:"def",label:"Por defecto (sin entrenar)",W:DEF_W,T:DEF_T},
+  ...TRAINED.rows.filter(r=>r.d!=="29/11").map(r=>({id:r.d,label:`Entrenados para el ${r.d}`,W:r.W,T:r.T}))];
+const KEY="hz-29-11-2026-v3";
+let S={w:{...TRAINED.final.W},T:TRAINED.final.T,preset:"final",base:"bb",weather:{},scr:{},odds:{},cur:1,bank:100};
+try{const s=JSON.parse(localStorage.getItem(KEY)||"null"); if(s) S={...S,...s,w:{...S.w,...(s.w||{})}};}catch(e){}
 let open=new Set();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
 const cloth=n=>`<span class="cloth" style="background:${CLOTH[(n-1)%12]};color:${CTXT[(n-1)%12]}">${n}</span>`;
@@ -147,13 +157,16 @@ const tname=t=>t.toLowerCase().replace(/(^|[ .])(\p{L})/gu,(m,a,b)=>a+b.toUpperC
 const scrSet=n=>new Set(S.scr[n]||[]);
 const oddsOf=n=>S.odds[n]||{};
 const tOf=n=>terrainFor(n,S.base,S.weather);
-function calc(r){ const res=scoreRace(r,STATS,S.w,tOf(r.n),VISITORS,scrSet(r.n)); const odds=oddsOf(r.n);
+const regLabel=s=>s<1.05?"muy regular":s<1.25?"regular":s<1.4?"irregular":"muy irregular";
+const cache=new Map();
+function calc(r,nSim){ const ck=JSON.stringify([r.n,S.w,S.T,tOf(r.n),S.scr[r.n],S.odds[r.n],nSim]); if(cache.has(ck)) return cache.get(ck);
+  const res=scoreRace(r,STATS,S.w,tOf(r.n),VISITORS,scrSet(r.n),S.T); const odds=oddsOf(r.n);
   const b=blendProbs(res,odds); const val=value(res,odds); res.forEach((o,i)=>o.pw=b?b.pc[i]:o.p);
-  return {res,odds,b,ranked:[...res].sort((x,y)=>y.pw-x.pw),cmb:combos(res,b?b.pc:null),val,risk:riskyPick(res,odds)}; }
-const names=hs=>hs.map(h=>`<span style="display:inline-flex;gap:4px;align-items:center">${cloth(h.no)}</span>`).join(" ");
-function tabs(){document.getElementById("tabs").innerHTML=RACES.map(r=>{const sc=scrSet(r.n).size;return `<button class="tab" role="tab" id="t${r.n}" aria-selected="${r.n===S.cur}" data-n="${r.n}"><b>${r.n}ª · ${r.hora}${sc?` · ${sc} baja${sc>1?"s":""}`:""}</b><small>${r.dist.toLocaleString("es-ES")} m · ${esc(r.name.replace("Premio ",""))}</small></button>`}).join("");}
+  const sim=simulate(res,b?b.pc:null,nSim,r.n*97+7); res.forEach((o,i)=>{o.p3=sim.top3[i]; o.sig=sim.sig[i];});
+  const out={res,odds,b,ranked:[...res].sort((x,y)=>y.pw-x.pw),sim,val,risk:riskyPick(res,odds)}; cache.set(ck,out); if(cache.size>60) cache.delete(cache.keys().next().value); return out; }
+function tabs(){document.getElementById("tabs").innerHTML=RACESX.map(r=>{const sc=scrSet(r.n).size;return `<button class="tab" role="tab" id="t${r.n}" aria-selected="${r.n===S.cur}" data-n="${r.n}"><b>${r.n}ª · ${r.hora}${sc?` · ${sc} baja${sc>1?"s":""}`:""}</b><small>${r.dist.toLocaleString("es-ES")} m · ${esc(r.name.replace("Premio ",""))}</small></button>`}).join("");}
 function race(){
-  const r=RACES.find(x=>x.n===S.cur), {res,odds,b,ranked,cmb,val,risk}=calc(r), t=tOf(r.n), sc=scrSet(r.n), mx=Math.max(...res.map(o=>o.p),.01);
+  const r=RACESX.find(x=>x.n===S.cur), {res,odds,b,ranked,sim,val,risk}=calc(r,20000), t=tOf(r.n), sc=scrSet(r.n), mx=Math.max(...res.map(o=>o.p),.01);
   const w=S.weather[r.n]||{cielo:"",temp:""};
   const byNo=Object.fromEntries(res.map(o=>[o.h.no,o]));
   const lanes=`<div class="tlab"><span>Por nº de mantilla · probabilidad de ganar</span><span>Meta →</span></div>`+r.horses.map(h=>{const o=byNo[h.no];
@@ -161,72 +174,82 @@ function race(){
     :`<div class="lane out"><span class="lname">${esc(h.name)}</span><div class="run"><span class="lpct" style="left:8px">retirado</span></div></div>`}).join("");
   const vmap=Object.fromEntries(val.map(v=>[v.o.h.no,v]));
   const rows=res.map((o,i)=>{const h=o.h, v=vmap[h.no], isO=open.has(h.no);
-    const fac=Object.keys(FNAMES).map(k=>{const x=o.f[k]; if(x==null) return `<span>${FNAMES[k]}</span><div class="fbar"></div><span class="small">n/d</span><span class="why">${esc(o.why[k])}</span>`;
+    const fac=FKEYS.map(k=>{const x=o.f[k];
       const left=Math.min(x,.5)*100, wd=Math.abs(x-.5)*100, col=x>=.5?"var(--turf)":"var(--acc)";
       return `<span>${FNAMES[k]}</span><div class="fbar"><span style="left:${left}%;width:${wd}%;background:${col}"></span><span style="left:50%;width:2px;background:var(--mut)"></span></div><span class="small">${(x*100).toFixed(0)}</span><span class="why">${esc(o.why[k])}${S.w[k]?"":" · peso 0"}</span>`}).join("");
     const runs=(h.runs||[]).map(x=>`<li>${esc(x.d)} · ${esc(x.txt)} · ${x.dist.toLocaleString("es-ES")} m · ${x.cat==="FR"?"Francia":"cat. "+esc(x.cat)} · <b>${esc(x.pos)}º</b>${x.of?" de "+x.of:""}${x.kg?" · "+String(x.kg).replace(".",",")+" kg":""}</li>`).join("");
     const evc=v.ev==null?"":`<span class="ev ${v.ev>0?"pos":"neg"}">${v.ev>0?"+":""}${(v.ev*100).toFixed(0)} %</span>`;
-    return `<tr class="row" tabindex="0" data-no="${h.no}" aria-expanded="${isO}"><td class="n">${i+1}</td><td><span style="display:flex;gap:8px;align-items:center">${cloth(h.no)}<span><span class="hn">${esc(h.name)}</span> <span class="small">${esc(h.eq||"")}</span><br><span class="small">${h.age} años · ${esc(h.c)}</span></span></span></td><td>${esc(h.jn)}<br><span class="small">${esc(tname(h.t))}</span></td><td class="n">${h.draw}</td><td class="n">${String(h.kg).replace(".",",")}</td><td class="fm">${h.form.length?esc(h.form.join("-")):"debuta"}</td><td class="n"><b>${pct(o.p)}</b><br><span class="small">podio ${pct(o.p3)}</span></td><td class="n">${dec(v.fair)}<br><span class="small">valor ≥ ${dec(v.minOdd)}</span></td><td class="n"><input class="odd" type="number" inputmode="decimal" step="0.1" min="1" id="od-${r.n}-${h.no}" data-no="${h.no}" value="${odds[h.no]??""}" placeholder="cuota" aria-label="Cuota de ${esc(h.name)}"></td><td class="n">${evc}</td></tr>`+
-    (isO?`<tr class="det"><td colspan="10">${h.note?`<p style="margin:0 0 10px"><b>${esc(h.note)}</b></p>`:""}<div class="fac">${fac}</div>${runs?`<ul class="runs">${runs}</ul>`:`<p class="small" style="margin:10px 0 0">Sin carreras reconstruidas en detalle (sin historial encontrado fuera de España).</p>`}</td></tr>`:"");}).join("");
-  const sl=Object.keys(FNAMES).map(k=>`<label class="sl" for="w-${k}"><span>${FNAMES[k]}</span><input type="range" id="w-${k}" data-k="${k}" min="0" max="50" value="${S.w[k]}"><span class="n">${S.w[k]}</span></label>`).join("");
+    return `<tr class="row" tabindex="0" data-no="${h.no}" aria-expanded="${isO}"><td class="n">${i+1}</td><td><span style="display:flex;gap:8px;align-items:center">${cloth(h.no)}<span><span class="hn">${esc(h.name)}</span> <span class="small">${esc(h.eq||"")}</span><br><span class="small">${h.age} años · ${esc(h.c)}</span></span></span></td><td>${esc(h.jn)}<br><span class="small">${esc(tname(h.t))}</span></td><td class="n">${h.draw}</td><td class="n">${String(h.kg).replace(".",",")}</td><td class="fm">${h.form.length?esc(h.form.join("-")):"debuta"}<br><span class="small">${h.form.length>1?regLabel(o.sig):"sin datos"}</span></td><td class="n"><b>${pct(o.p)}</b><br><span class="small">podio ${pct(o.p3)}</span></td><td class="n">${dec(v.fair)}<br><span class="small">valor ≥ ${dec(v.minOdd)}</span></td><td class="n"><input class="odd" type="number" inputmode="decimal" step="0.1" min="1" id="od-${r.n}-${h.no}" data-no="${h.no}" value="${odds[h.no]??""}" placeholder="cuota" aria-label="Cuota de ${esc(h.name)}"></td><td class="n">${evc}</td></tr>`+
+    (isO?`<tr class="det"><td colspan="10">${h.note?`<p style="margin:0 0 10px"><b>${esc(h.note)}</b></p>`:""}<div class="fac">${fac}</div>${runs?`<ul class="runs">${runs}</ul>`:`<p class="small" style="margin:10px 0 0">Sin carreras anteriores encontradas.</p>`}</td></tr>`:"");}).join("");
+  const presetOpts=PRESETS.map(p=>`<option value="${p.id}" ${S.preset===p.id?"selected":""}>${esc(p.label)}</option>`).join("")+`<option value="custom" ${S.preset==="custom"?"selected":""}>Personalizados</option>`;
+  const sl=FKEYS.map(k=>`<label class="sl" for="w-${k}"><span>${FNAMES[k]}</span><input type="range" id="w-${k}" data-k="${k}" min="0" max="50" value="${S.w[k]}"><span class="n">${S.w[k]}</span></label>`).join("");
   const scr=r.horses.map(h=>`<button class="scr" data-scr="${h.no}" aria-pressed="${sc.has(h.no)}">${cloth(h.no)}${esc(h.name.replace(/ \(.*\)/,""))}</button>`).join("");
   const cielo=Object.entries(CIELO).map(([k,c])=>`<option value="${k}" ${w.cielo===k?"selected":""}>${c.label}</option>`).join("");
   const P=b?"combinada mercado + modelo":"del modelo";
   const fav=ranked[0], plc=[...res].sort((a,b2)=>b2.p3-a.p3)[0];
-  const li=(arr,ord)=>arr.slice(0,4).map(c=>`<li><span class="k">${c.h.map(h=>cloth(h.no)).join(ord?" → ":" ")}</span> ${pct(c.p)} · cuota mín. ${dec(MARGIN/c.p)}</li>`).join("");
+  const favs=new Set(ranked.slice(0,3).map(o=>o.h.no));
+  const li=(arr,ord)=>arr.slice(0,4).map(c=>{const surprise=c.h.some(h=>!favs.has(h.no)); return `<li><span class="k">${c.h.map(h=>cloth(h.no)).join(ord?" → ":" ")}</span> ${pct(c.p)} · cuota mín. ${dec(MARGIN/c.p)}${surprise?` <span class="small">· incluye un no favorito</span>`:""}</li>`}).join("");
   let riskHtml="";
-  if(risk.mode==="cuotas"){const k=risk.pick; const st=S.bank*k.kelly;
-    riskHtml=`<div class="k">${cloth(k.o.h.no)}<b>${esc(k.o.h.name)}</b> a ${dec(k.od)}</div><p style="margin:4px 0">Probabilidad ${P}: ${pct(k.pc)} frente a ${pct(k.pm)} que marca la cuota. Valor esperado <b>+${(k.ev*100).toFixed(0)} %</b>.</p><p class="small" style="margin:0">¼ de Kelly con banca de ${S.bank} €: ${st.toFixed(2).replace(".",",")} €. Gemela arriesgada: ${cloth(k.o.h.no)} con ${cloth(fav.h.no)}.</p>`;}
+  const gemWith=(a,bb)=>sim.gem.find(g=>g.h.some(x=>x.no===a)&&g.h.some(x=>x.no===bb));
+  if(risk.mode==="cuotas"){const k=risk.pick; const st=S.bank*k.kelly; const gw=gemWith(k.o.h.no,fav.h.no);
+    riskHtml=`<div class="k">${cloth(k.o.h.no)}<b>${esc(k.o.h.name)}</b> a ${dec(k.od)}</div><p style="margin:4px 0">Probabilidad ${P}: ${pct(k.pc)} frente a ${pct(k.pm)} que marca la cuota. Valor esperado <b>+${(k.ev*100).toFixed(0)} %</b>.</p><p class="small" style="margin:0">¼ de Kelly con banca de ${S.bank} €: ${st.toFixed(2).replace(".",",")} €.${gw?` Gemela arriesgada ${k.o.h.no}-${fav.h.no}: ${pct(gw.p)}, cuota mínima ${dec(MARGIN/gw.p)}.`:""}</p>`;}
   else if(risk.mode==="sin-valor") riskHtml=`<p style="margin:4px 0">Con las cuotas escritas no hay ningún caballo de cuota ≥ 5 con valor. Mejor no forzar la apuesta.</p>`;
-  else if(risk.mode==="estimado"){const k=risk.pick; riskHtml=`<div class="k">${cloth(k.o.h.no)}<b>${esc(k.o.h.name)}</b></div><p style="margin:4px 0">Tercer escalón del modelo (${pct(k.o.p)}, podio ${pct(k.o.p3)}). Sólo tiene valor si la cuota de la casa es <b>${dec(k.minOdd)} o más</b>. Escribe las cuotas para confirmarlo.</p><p class="small" style="margin:0">Gemela arriesgada: ${cloth(k.o.h.no)} con ${cloth(fav.h.no)}, cuota mínima ${dec(MARGIN/(cmb.gem.find(g=>g.h.some(x=>x.no===k.o.h.no)&&g.h.some(x=>x.no===fav.h.no))?.p||1))}.</p>`;}
+  else if(risk.mode==="estimado"){const k=risk.pick; const gw=gemWith(k.o.h.no,fav.h.no); riskHtml=`<div class="k">${cloth(k.o.h.no)}<b>${esc(k.o.h.name)}</b></div><p style="margin:4px 0">Fuera de los dos favoritos, el de más opciones (${pct(k.o.p)}, podio ${pct(k.o.p3)}). Sólo tiene valor si la cuota de la casa es <b>${dec(k.minOdd)} o más</b>. Escribe las cuotas para confirmarlo.</p>${gw?`<p class="small" style="margin:0">Gemela arriesgada ${k.o.h.no}-${fav.h.no}: ${pct(gw.p)}, cuota mínima ${dec(MARGIN/gw.p)}.</p>`:""}`;}
   else riskHtml=`<p style="margin:4px 0">No hay candidato claro.</p>`;
   document.getElementById("race").innerHTML=`<div class="rhead"><div><h2>${r.n}ª · ${esc(r.name)}</h2><div class="sub">${esc(r.sub)}</div></div><div class="chips"><span class="chip">${r.dist.toLocaleString("es-ES")} m</span><span class="chip">${r.hora} h</span><span class="chip">${esc(r.premio)}</span><span class="chip">${res.length} de ${r.horses.length} corren</span><span class="chip ${t>=2?"hot":""}">Pista: ${esc(terrLabel(t))} (${dec(t)})</span></div></div>
   <div class="live"><div><h3>Tiempo ahora</h3><div class="hrow"><label class="sel" for="cielo">Cielo <select id="cielo"><option value="">— sin dato —</option>${cielo}</select></label><label class="sel" for="temp">°C <input type="number" id="temp" inputmode="numeric" style="width:84px" value="${w.temp??""}"></label></div><p class="small" style="margin:8px 0 0">La lluvia ablanda la pista para esta carrera y las siguientes.</p></div>
-  <div><h3>Bajas de última hora</h3><div class="hrow">${scr}</div><p class="small" style="margin:8px 0 0">Pulsa un caballo para retirarlo; las probabilidades se recalculan.</p></div></div>
+  <div><h3>Bajas de última hora</h3><div class="hrow">${scr}</div><p class="small" style="margin:8px 0 0">Pulsa un caballo para retirarlo; todo se recalcula.</p></div></div>
   <div class="track" role="img" aria-label="Probabilidad de victoria por caballo">${lanes}</div>
   <div class="bets">
    <div class="bet"><h3>Ganador</h3><div class="k">${cloth(fav.h.no)}<b>${esc(fav.h.name)}</b></div><div class="big">${pct(fav.pw)}</div><p class="small" style="margin:0">Cuota mínima con valor: ${dec(MARGIN/fav.pw)}</p></div>
-   <div class="bet"><h3>Colocado</h3><div class="k">${cloth(plc.h.no)}<b>${esc(plc.h.name)}</b></div><div class="big">${pct(plc.p3)}</div><p class="small" style="margin:0">Probabilidad de acabar entre los 3 primeros.</p></div>
-   <div class="bet"><h3>Gemela</h3><p class="small" style="margin:0">Los dos primeros, en cualquier orden</p><ol>${li(cmb.gem)}</ol><p class="small" style="margin:6px 0 0">Ordenada: ${cmb.gemO.slice(0,2).map(c=>c.h.map(h=>h.no).join("→")+" "+pct(c.p)).join(" · ")}</p></div>
-   <div class="bet"><h3>Trío</h3><p class="small" style="margin:0">Los tres primeros, en cualquier orden</p><ol>${li(cmb.tri)}</ol><p class="small" style="margin:6px 0 0">Ordenado: ${cmb.triO.slice(0,2).map(c=>c.h.map(h=>h.no).join("→")+" "+pct(c.p)).join(" · ")}</p></div>
+   <div class="bet"><h3>Colocado</h3><div class="k">${cloth(plc.h.no)}<b>${esc(plc.h.name)}</b></div><div class="big">${pct(plc.p3)}</div><p class="small" style="margin:0">Más probable entre los 3 primeros (${regLabel(plc.sig)}).</p></div>
+   <div class="bet"><h3>Gemela</h3><p class="small" style="margin:0">Los dos primeros, en cualquier orden</p><ol>${li(sim.gem)}</ol><p class="small" style="margin:6px 0 0">Ordenada: ${sim.gemO.slice(0,2).map(c=>c.h.map(h=>h.no).join("→")+" "+pct(c.p)).join(" · ")}</p></div>
+   <div class="bet"><h3>Trío</h3><p class="small" style="margin:0">Los tres primeros, en cualquier orden</p><ol>${li(sim.tri)}</ol><p class="small" style="margin:6px 0 0">Ordenado: ${sim.triO.slice(0,2).map(c=>c.h.map(h=>h.no).join("→")+" "+pct(c.p)).join(" · ")}</p></div>
    <div class="bet risk"><h3>Apuesta arriesgada</h3>${riskHtml}</div>
   </div>
   <div class="grid2"><div><div class="scroll"><table class="stack"><thead><tr><th class="n">#</th><th>Caballo</th><th>Jinete / preparador</th><th class="n">Cajón</th><th class="n">Kg</th><th>Forma</th><th class="n">Prob.</th><th class="n">Cuota justa</th><th class="n">Cuota casa</th><th class="n">Valor</th></tr></thead><tbody>${rows}</tbody></table></div>
   <p class="small">Pulsa un caballo para ver el desglose y sus carreras anteriores. Valor = probabilidad ${P} × cuota − 1.</p></div>
-  <aside><div class="box"><h3>Pesos del modelo</h3><p class="small" style="margin:0 0 6px">Se aplican a todas las carreras.</p><div class="sls">${sl}
-  <label class="sl" for="bank" style="margin-top:10px"><span>Banca €</span><input type="number" id="bank" min="1" value="${S.bank}" style="width:100%"><span></span></label></div>
-  <div class="hrow" style="margin-top:10px"><button class="btn" id="reset">Restablecer pesos</button><button class="btn" id="clearRace">Limpiar esta carrera</button></div></div></aside></div>`;
+  <div class="box"><h3>Pesos del modelo</h3><div class="hrow" style="margin:4px 0 8px"><label class="sel" for="preset">Juego de pesos <select id="preset">${presetOpts}</select></label><span class="small">Temperatura ${dec(S.T)} · se aplican a todas las carreras</span></div><div class="sls">${sl}
+  <label class="sl" for="bank"><span>Banca €</span><input type="number" id="bank" min="1" value="${S.bank}" style="width:100%"><span></span></label></div>
+  <div class="hrow" style="margin-top:10px"><button class="btn" id="clearRace">Limpiar esta carrera</button></div></div></div>`;
 }
 function sum(){
-  document.getElementById("sum").innerHTML=RACES.map(r=>{const {ranked,b,cmb,risk}=calc(r);
+  document.getElementById("sum").innerHTML=RACESX.map(r=>{const {ranked,sim,risk}=calc(r,20000);
     return `<div class="scard"><h3>${r.n}ª · ${r.hora} · ${r.dist.toLocaleString("es-ES")} m</h3><div class="small">${esc(r.name)} · pista ${esc(terrLabel(tOf(r.n)).toLowerCase())}</div>${ranked.slice(0,3).map((o,i)=>`<div class="pick">${cloth(o.h.no)}<span style="flex:1">${i===0?"<b>":""}${esc(o.h.name)}${i===0?"</b>":""}</span><span class="cond" style="font-size:18px">${pct(o.pw)}</span></div>`).join("")}
-    <p class="small" style="margin:8px 0 0">Gemela ${cmb.gem[0].h.map(h=>h.no).join("-")} · Trío ${cmb.tri[0].h.map(h=>h.no).join("-")}${risk.pick?` · Riesgo: ${risk.pick.o.h.no}`:""}</p></div>`}).join("");
+    <p class="small" style="margin:8px 0 0">Gemela ${sim.gem[0].h.map(h=>h.no).join("-")} · Trío ${sim.tri[0].h.map(h=>h.no).join("-")}${risk.pick?` · Riesgo: ${risk.pick.o.h.no}`:""}</p></div>`}).join("");
 }
-function bt(){ const x=backtest(BT,STATS_RACES,S.w);
-  document.getElementById("bt").innerHTML=`<div class="scroll"><table><thead><tr><th>Jornada</th><th class="n">Carrera</th><th class="n">Pick</th><th class="n">Ganó</th><th class="n">Puesto del ganador en el modelo</th><th class="n">Prob. dada al ganador</th></tr></thead><tbody>${x.rows.map(r=>`<tr><td>${r.d}</td><td class="n">${r.r}ª</td><td class="n">${r.pick}</td><td class="n">${r.win}</td><td class="n">${r.rank}º de ${r.n}</td><td class="n">${pct(r.pw)}</td></tr>`).join("")}</tbody></table></div>
-  <p>Acierto del ganador: <b>${(x.winHit*100).toFixed(0)} %</b> (al azar ${(x.unifWin*100).toFixed(0)} %). El ganador estaba entre los 3 primeros del modelo en el <b>${(x.top3*100).toFixed(0)} %</b> de las carreras y el primer pick acabó en el podio en el <b>${(x.placeHit*100).toFixed(0)} %</b>. Pérdida logarítmica ${x.ll.toFixed(3).replace(".",",")} frente a ${x.llU.toFixed(3).replace(".",",")} al azar (menos es mejor).</p>`;}
-function all(){tabs();race();sum();bt();}
+function wf(){
+  const ks=FKEYS;
+  document.getElementById("wf").innerHTML=`<div class="scroll"><table><thead><tr><th>Jornada</th><th class="n">Carreras de entreno</th>${ks.map(k=>`<th class="n">${FNAMES[k]}</th>`).join("")}<th class="n">Temp.</th><th class="n">Pérdida (entrenados)</th><th class="n">Pérdida (por defecto)</th><th class="n">Pérdida (azar)</th></tr></thead><tbody>${TRAINED.rows.map(r=>`<tr><td style="white-space:nowrap">${r.jornada}ª · ${r.d}</td><td class="n">${r.nTrain}</td>${ks.map(k=>`<td class="n">${r.W[k]}</td>`).join("")}<td class="n">${dec(r.T)}</td><td class="n">${r.test?r.test.ll.toFixed(3).replace(".",","):"—"}</td><td class="n">${r.testDef?r.testDef.ll.toFixed(3).replace(".",","):"—"}</td><td class="n">${r.test?r.test.llU.toFixed(3).replace(".",","):"—"}</td></tr>`).join("")}</tbody></table></div>`;
+  const s=TRAINED.summary;
+  document.getElementById("wfsum").innerHTML=`<p>En las ${s.trained.n} carreras de prueba (18/10–22/11), los pesos entrenados dan una pérdida logarítmica media de <b>${s.trained.ll.toFixed(3).replace(".",",")}</b>, los de por defecto ${s.def.ll.toFixed(3).replace(".",",")} y elegir al azar ${s.trained.llU.toFixed(3).replace(".",",")} (menos es mejor). El favorito del modelo ganó el <b>${(s.trained.hit*100).toFixed(0)} %</b> de las veces y el ganador estuvo entre los 3 primeros del modelo el ${(s.trained.t3*100).toFixed(0)} %. Conclusión: el modelo apenas supera al azar y entrenar todavía no mejora a los pesos por defecto; lo que más se mueve es la <b>clase</b>, que gana peso jornada a jornada.</p>`;
+  const c=TRAINED.combo;
+  document.getElementById("cmpTxt").innerHTML=`Prueba en ${c.n} carreras (pérdida logarítmica, menos es mejor): gemela real ${c.s2.toFixed(3).replace(".",",")} con la simulación frente a ${c.h2.toFixed(3).replace(".",",")} con Harville; trío real ${c.s3.toFixed(3).replace(".",",")} frente a ${c.h3.toFixed(3).replace(".",",")}.`;
+}
+function all(){tabs();race();sum();}
 document.getElementById("base").value=S.base;
 document.addEventListener("click",e=>{const t=e.target.closest(".tab"); if(t){S.cur=+t.dataset.n; open.clear(); save(); all(); return;}
   const s=e.target.closest("[data-scr]"); if(s){const n=S.cur, no=+s.dataset.scr, set=scrSet(n); set.has(no)?set.delete(no):set.add(no); S.scr[n]=[...set]; save(); tabs(); race(); sum(); document.querySelector(`[data-scr="${no}"]`)?.focus(); return;}
   if(e.target.closest("input,select")) return;
   const r=e.target.closest("tr.row"); if(r){const n=+r.dataset.no; open.has(n)?open.delete(n):open.add(n); race(); document.querySelector(`tr.row[data-no="${n}"]`)?.focus(); return;}
-  if(e.target.id==="reset"){S.w={...DEF_W}; save(); race(); sum(); bt();}
   if(e.target.id==="clearRace"){delete S.weather[S.cur]; delete S.scr[S.cur]; delete S.odds[S.cur]; save(); all();}
   if(e.target.id==="resetAll"){const ok=document.getElementById("resetAll"); if(ok.dataset.c){S.weather={};S.scr={};S.odds={};delete ok.dataset.c;ok.textContent="Borrar datos del día";save();all();} else {ok.dataset.c=1;ok.textContent="Pulsa otra vez para confirmar";}}
 });
 document.addEventListener("keydown",e=>{const r=e.target.closest&&e.target.closest("tr.row"); if(r&&e.target===r&&(e.key==="Enter"||e.key===" ")){e.preventDefault(); r.click();}
   const t=e.target.closest&&e.target.closest(".tab"); if(t&&(e.key==="ArrowRight"||e.key==="ArrowLeft")){S.cur=((S.cur-1+(e.key==="ArrowRight"?1:5))%6)+1; open.clear(); save(); all(); document.getElementById("t"+S.cur).focus();}});
+let raf=0;
 document.addEventListener("input",e=>{const el=e.target;
-  if(el.dataset&&el.dataset.k){S.w[el.dataset.k]=+el.value; el.nextElementSibling.textContent=el.value; save(); const id=el.id; race(); sum(); bt(); document.getElementById(id)?.focus(); return;}
+  if(el.dataset&&el.dataset.k){S.w[el.dataset.k]=+el.value; S.preset="custom"; el.nextElementSibling.textContent=el.value; save(); const id=el.id;
+    cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{race(); sum(); document.getElementById(id)?.focus();}); return;}
   if(el.id==="bank"){const v=parseFloat(el.value); if(v>0){S.bank=v; save();} return;}});
 document.addEventListener("change",e=>{const el=e.target, n=S.cur;
   if(el.id==="base"){S.base=el.value; save(); all(); return;}
+  if(el.id==="preset"){const p=PRESETS.find(x=>x.id===el.value); if(p){S.w={...p.W}; S.T=p.T;} S.preset=el.value; save(); race(); sum(); document.getElementById("preset")?.focus(); return;}
   if(el.id==="cielo"||el.id==="temp"){const w=S.weather[n]||{}; if(el.id==="cielo") w.cielo=el.value; else w.temp=el.value===""?"":+el.value; S.weather[n]=w; save(); race(); sum(); document.getElementById(el.id)?.focus(); return;}
   if(el.id==="bank"){race(); return;}
   if(el.classList.contains("odd")){const o=S.odds[n]||{}, v=parseFloat(String(el.value).replace(",",".")); if(v>1) o[el.dataset.no]=v; else delete o[el.dataset.no]; S.odds[n]=o; save(); const id=el.id; race(); sum(); document.getElementById(id)?.focus();}
 });
-all();
+all(); wf();
 }
 </script>
 </body>
