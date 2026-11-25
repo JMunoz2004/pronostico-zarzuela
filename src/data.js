@@ -83,9 +83,9 @@ const RACES = [
   {no:8,name:"Silent Faith (IRE)",age:2,kg:55.5,j:"MELGAREJO",jn:"I. Melgarejo",t:"A.SOTO",c:"Ezenel",draw:9,form:["01"],runs:[{d:"01/11",dist:1800,cat:"C",pos:1,of:7,kg:54,txt:"Premio Fabio de Turnes (debut, ganó)"}]},
   {no:9,name:"Strivena (IRE)",eq:"(3)",age:2,kg:55.5,j:"DE JULIAN",jn:"N. de Julián",t:"V.H.ROMEA",c:"Annua Racing",draw:3,form:["04"]}]},
  {n:6,name:"Premio Casaca",sub:"3 años · Categoría D",dist:1400,cat:"D",hora:"14:25",premio:"8.500 €",horses:[
-  {no:1,name:"Ballistic Missile (IRE)",eq:"(8)",age:3,kg:61,j:"JANACEK",jn:"V. Janáček",t:"G.ARIZKORRETA",c:"Yeguada Rocío",draw:8,form:["02","01","06","02","18"],runs:[{d:"01/11",dist:1200,cat:"D",pos:1,of:11,kg:58,txt:"Premio Ovidio Rodríguez (recta)"}]},
+  {no:1,name:"Ballistic Missile (IRE)",eq:"(8)",age:3,kg:61,j:"JANACEK",jn:"V. Janáček",t:"G.ARIZKORRETA",c:"Yeguada Rocío",draw:8,form:["02","01","06","02","18"],runs:[{d:"01/11",dist:1200,cat:"D",pos:2,of:11,kg:58,txt:"Premio Ovidio Rodríguez (recta)"}]},
   {no:2,name:"Amazonico (FR)",age:3,kg:59,j:"V.ALONSO",jn:"V. Alonso V. (59)",t:"CH.DELCHER",c:"M. de Miraflores",draw:4,form:["01","01","02","03","08"],runs:[{d:"08/11",dist:1600,cat:"C",pos:1,of:12,kg:60,txt:"Hándicap Infanta Beatriz"}]},
-  {no:3,name:"Duke of Cumberland (IRE)",eq:"(8)",age:3,kg:59,j:"SIKOROVA",jn:"D. Sikorová (59)",t:"M.AUGELLI",c:"Mediterráneo",draw:7,form:["01","04","06","03","04"]},
+  {no:3,name:"Duke of Cumberland (IRE)",eq:"(8)",age:3,kg:59,j:"SIKOROVA",jn:"D. Sikorová (59)",t:"M.AUGELLI",c:"Mediterráneo",draw:7,form:["01","04","06","03","04"],lastOld:"20/06",note:"No corre desde el 20/06: más de 5 meses parado."},
   {no:4,name:"Never Ever (IRE)",age:3,kg:60,j:"MELGAREJO",jn:"I. Melgarejo",t:"B.RAMA",c:"Soñador",draw:1,form:["09","03","04","01","01"],note:"Corrió en Irlanda a 2 años con J.P. O'Brien (rating IHRB 78); se cayó en Madrid el 16/07."},
   {no:5,name:"Shine Sun (GB)",age:3,kg:60,j:"GELABERT",jn:"J. Gelabert",t:"G.RODRIGUEZ",c:"Mediterráneo",draw:6,form:["03","02","02","04","NP"],runs:[{d:"01/11",dist:1500,cat:"D",pos:3,of:12,kg:62,txt:"Hándicap Karluv Most (peso máximo)"}]},
   {no:6,name:"Lord Jinks (FR)",age:3,kg:58,j:"PASQUIER",jn:"S. Pasquier",t:"F.RODRIGUEZ",c:"Cuadra A.F.F",draw:2,form:["01","03","05","04"]},

@@ -46,6 +46,31 @@ function autoRuns(name, train, beforeIdx, J){
   return out.sort((a,b)=>b.idx-a.idx);
 }
 
+// ---------- Historial con fecha: últimas 5 carreras en los últimos 3 meses, en cualquier hipódromo ----------
+const REF_DATE="2026-11-29", WIN_FROM="2026-08-31", HIST_N=5;
+const GOING=["bueno","bueno a blando","blando","muy blando"];
+function isoOf(d){ const m=/^(\d\d)\/(\d\d)(?:\/(\d\d))?$/.exec(String(d||"")); return m?`${m[3]?"20"+m[3]:"2026"}-${m[2]}-${m[1]}`:null; }
+const ddmm=iso=>iso.slice(8,10)+"/"+iso.slice(5,7);
+function courseOf(r){ if(r.course) return r.course; const t=r.txt||""; const m=/\(([^)]*Francia[^)]*)\)/.exec(t);
+  if(r.cat==="FR"){ const c=/(Nantes|Dax|Pau|Le Mans|La Teste|Lyon-Parilly|Marseille-Borély|Toulouse|Tarbes)/.exec(t); return (c?c[1]:"Francia")+(c?" (Francia)":""); } if(/San Sebasti/i.test(t)) return "San Sebastián"; return "La Zarzuela"; }
+// Junta, por fecha, las carreras de la temporada en La Zarzuela (TRAIN), las de septiembre/octubre y las de otros hipódromos
+// (extra) y las reconstruidas a mano en el programa (h.runs). Si una fecha aparece en varias fuentes, manda la más precisa.
+function buildHist(h, train, J, extra, from, maxN){
+  const key=normName(h.name), by={};
+  const add=(r,pri)=>{ if(!r.date||r.date<from||r.date>=REF_DATE) return; if(/^(NP|TBE)$/i.test(String(r.pos))) { by[r.date]={skip:true,pri:9}; return; }
+    const o=by[r.date]; if(o&&o.skip) return; by[r.date]=!o?{...r,pri}:pri>o.pri?{...o,...r,pri}:{...r,...o}; };
+  for(const a of autoRuns(h.name,train,J.length,J)) add({...a,date:isoOf(a.d),course:"La Zarzuela"},1);
+  for(const e of extra) if(normName(e.name)===key) add({...e,course:e.course||"La Zarzuela"},e.r?2:3);
+  for(const m of (h.runs||[])){ const iso=isoOf(m.d); if(iso) add({...m,date:iso,course:courseOf(m)},4); }
+  return Object.values(by).filter(r=>!r.skip).map(r=>{ const {pri,auto,...x}=r; return {...x,d:ddmm(r.date)}; })
+    .sort((a,b)=>a.date<b.date?1:-1).slice(0,maxN||HIST_N);
+}
+// Puntos de una carrera teniendo en cuenta el nº de participantes (3º de 18 vale más que 3º de 6)
+function runPts(r){ const s=String(r.pos); let p=parseInt(s,10); if(isNaN(p)) return .05;
+  if(s.includes("+")) p=r.of?Math.max(6,Math.round((6+r.of)/2)):7;
+  const rel=r.of>1?1-(p-1)/(r.of-1):.5; return .6*(FPTS[p]??.06)+.4*rel; }
+const daysTo=iso=>(Date.parse(REF_DATE)-Date.parse(iso))/864e5;
+
 // ---------- Lo que va de día ----------
 // A partir de las llegadas ya introducidas hoy: puntos de cada jinete/preparador frente a lo esperado
 // (1º=1, 2º=0,5, 3º=0,3, 4º=0,15, 5º=0,08; esperado = 1,98/participantes) y sesgo de cajón en carreras de hasta 2.000 m.
@@ -75,12 +100,18 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
   const anyForm=H.some(x=>x.form.length);
   return H.map(h=>{
     const f={}, why={};
-    if(h.form.length){ const ws=[1,.8,.6,.45,.35]; let s=0,ws_=0; h.form.slice(0,5).forEach((p,i)=>{s+=ws[i]*posPts(p);ws_+=ws[i];});
+    if(h.hist && h.hist.length){ let s=0,ws_=0; for(const r of h.hist){ const w=Math.exp(-daysTo(r.date)/40); s+=w*runPts(r); ws_+=w; }
+      const n=h.hist.length, v=Math.min(1,.08+s/ws_*1.1); f.forma=.38+(v-.38)*n/(n+1);
+      why.forma=`${n} carrera${n>1?"s":""} en 3 meses: `+h.hist.map(r=>`${r.pos}º/${r.of||"?"} (${r.d})`).join(", ")+(n<3?" · pocas carreras: se acerca al neutro":""); }
+    else if(h.hist && h.lastOld){ f.forma=.32; why.forma=`sin carreras en los últimos 3 meses (última: ${h.lastOld})`; }
+    else if(h.hist && h.form.length){ const ws=[1,.8,.6,.45,.35]; let s=0,ws_=0; h.form.slice(0,5).forEach((p,i)=>{s+=ws[i]*posPts(p);ws_+=ws[i];});
+      const v=Math.min(1,.08+s/ws_*1.05), n=Math.min(5,h.form.length)/2; f.forma=.38+(v-.38)*n/(n+1); why.forma=h.form.join("-")+" (programa; fechas sin confirmar, cuenta a medias)"; }
+    else if(h.form.length){ const ws=[1,.8,.6,.45,.35]; let s=0,ws_=0; h.form.slice(0,5).forEach((p,i)=>{s+=ws[i]*posPts(p);ws_+=ws[i];});
       f.forma=Math.min(1,.08+s/ws_*1.05); why.forma=h.form.join("-"); }
     else if(anyForm){ f.forma=.35; why.forma="debutante frente a caballos con experiencia"; }
     else { f.forma=.5; why.forma="debutante (todo el lote debuta: no cuenta)"; }
-    const runs=(h.runs||[]).filter(r=>!/^(NP|TBE)$/.test(String(r.pos)));
-    if(runs.length){ let s=0,ws_=0; for(const r of runs){ const sim=Math.exp(-Math.abs(r.dist-race.dist)/(.25*race.dist)); s+=sim*posPts(r.pos); ws_+=sim; }
+    const runs=(h.hist||h.runs||[]).filter(r=>!/^(NP|TBE)$/.test(String(r.pos))&&r.dist);
+    if(runs.length){ let s=0,ws_=0; for(const r of runs){ const sim=Math.exp(-Math.abs(r.dist-race.dist)/(.25*race.dist)); s+=sim*(h.hist?runPts(r):posPts(r.pos)); ws_+=sim; }
       const conf=Math.min(1,ws_), raw=Math.min(1,.1+s/ws_); let v=.5+(raw-.5)*conf;
       if(race.dist>=3000 && Math.max(...runs.map(r=>r.dist))>=2800) v=.5+(v-.5)*fondoM;
       f.distancia=Math.max(.05,Math.min(.95,v)); why.distancia=runs.slice(0,6).map(r=>`${r.dist} m: ${r.pos}º`).join(", "); }
@@ -101,7 +132,7 @@ function features(race,stats,t,VIS,scratched,ctx,dayW){
     if(runs.length){ const last=runs[0]; const dc=(CAT[last.cat]||2)-(CAT[race.cat]||2); f.clase=Math.max(.1,Math.min(.9,.5+.12*dc));
       why.clase=dc>0?`baja de categoría (${last.cat==="FR"?"Francia":last.cat} → ${race.cat})`:dc<0?`sube de categoría (${last.cat} → ${race.cat})`:`misma categoría (${race.cat})`; }
     else { f.clase=.5; why.clase="sin referencia"; }
-    { const gr=(h.runs||[]).filter(r=>r.g!=null);
+    { const hh=h.hist||[], gr=[...hh,...(h.runs||[]).filter(r=>!hh.some(x=>x.d===r.d))].filter(r=>r.g!=null);
       if(gr.length){ let s=0; for(const r of gr) s+=(posPts(r.pos)-.35)*(r.g/3); s/=gr.length;
         f.terreno=Math.max(.1,Math.min(.9,.5+s*3.2*(t/3)));
         why.terreno=gr.map(r=>`${TERR_NAMES[r.g].toLowerCase()}: ${r.pos}º`).join(", ")+(t<.5?" (hoy pista buena: apenas cuenta)":""); }
@@ -219,4 +250,4 @@ function evalRaces(prepared,W,T){
     hit+=gt===0?1/eq:0; t3+=Math.max(0,Math.min(eq,3-gt))/eq; n++; }
   return {n,ll:ll/n,llU:llU/n,hit:hit/n,t3:t3/n};
 }
-if (typeof module!=="undefined") module.exports={dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};
+if (typeof module!=="undefined") module.exports={buildHist,runPts,isoOf,REF_DATE,WIN_FROM,GOING,dayContext,todayAsTrain,posPts,normName,buildStats,autoRuns,features,scoreRace,softmax,harville,harvilleUnordered,sigmaOf,simulate,blendProbs,value,riskyPick,prepareTrain,fitWeights,evalRaces,terrainFor,terrLabel,DEF_W,DEF_T,FNAMES,FKEYS,CIELO,TERR_NAMES,BASE_T,MARGIN};

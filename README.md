@@ -5,6 +5,7 @@ Página web (un solo `index.html`, sin servidor) que pronostica las seis carrera
 ## Qué hace
 
 - **Probabilidad de victoria y de podio** de cada caballo a partir de ocho factores: forma, distancia, clase, terreno, jinete, preparador, peso y cajón. Los pesos se ajustan con deslizadores.
+- **Forma y distancia con historial fechado:** para cada caballo se usan sus últimas 5 carreras de los últimos 3 meses (desde el 31/08/2026) en cualquier hipódromo (La Zarzuela, San Sebastián, Francia…). Cada carrera pesa más cuanto más reciente es (vida media ≈ 4 semanas), el puesto se corrige por el nº de participantes y, con pocas carreras, el factor se acerca al neutro. Sin carreras en la ventana: penalización leve; con forma de programa sin fecha: cuenta a medias. Datos en `src/sept-runs.js` (`SEPT_RUNS`, `EXTRA_RUNS`).
 - **Tiempo por carrera**: eliges el cielo (sol, nubes, llovizna, lluvia, lluvia fuerte) y la temperatura. La lluvia ablanda la pista para esa carrera y las siguientes, y eso cambia el efecto del peso, del cajón y de la preferencia de cada caballo por el barro.
 - **Bajas de última hora**: pulsas el caballo y se recalcula todo sin él.
 - **Gemelas y tríos** (con y sin orden), con la fórmula de Harville con descuento.

@@ -149,7 +149,12 @@ const pct=p=>(p*100).toFixed(1).replace(".",",")+" %";
 const dec=x=>x.toFixed(1).replace(".",",");
 const STATS=buildStats(TRAIN);
 // Carreras previas de cada caballo del domingo: las reconstruidas a mano (incluido el extranjero) + las de La Zarzuela desde el 11/10
-const RACESX=RACES.map(r=>({...r,horses:r.horses.map(h=>{const man=h.runs||[]; const au=autoRuns(h.name,TRAIN,7,JOR).filter(a=>!man.some(m=>m.d===a.d)); return {...h,runs:[...man,...au]};})}));
+const RUNS_EXTRA=SEPT_RUNS.concat(EXTRA_RUNS);
+const RACESX=RACES.map(r=>({...r,date:REF_DATE,horses:r.horses.map(h=>{const man=h.runs||[]; const au=autoRuns(h.name,TRAIN,7,JOR).filter(a=>!man.some(m=>m.d===a.d));
+  const hist=buildHist(h,TRAIN,JOR,RUNS_EXTRA,WIN_FROM,5); let lastOld=h.lastOld;
+  if(!hist.length&&!lastOld){ const ds=man.map(m=>isoOf(m.d)).filter(Boolean).sort(); if(ds.length){ const x=ds.pop(); lastOld=x.slice(8,10)+"/"+x.slice(5,7); } }
+  const older=[...man,...au].filter(m=>{const i=isoOf(m.d); return !i||i<WIN_FROM;});
+  return {...h,hist,lastOld,older,runs:[...man,...au]};})}));
 const PRESETS=[{id:"final",label:"Entrenados para el 29/11",W:TRAINED.final.W,T:TRAINED.final.T},{id:"def",label:"Por defecto (sin entrenar)",W:DEF_W,T:DEF_T},
   ...TRAINED.rows.filter(r=>r.d!=="29/11").map(r=>({id:r.d,label:`Entrenados para el ${r.d}`,W:r.W,T:r.T}))];
 const KEY="hz-29-11-2026-v4";
@@ -186,10 +191,14 @@ function race(){
     const fac=FKEYS.map(k=>{const x=o.f[k];
       const left=Math.min(x,.5)*100, wd=Math.abs(x-.5)*100, col=x>=.5?"var(--turf)":"var(--acc)";
       return `<span>${FNAMES[k]}</span><div class="fbar"><span style="left:${left}%;width:${wd}%;background:${col}"></span><span style="left:50%;width:2px;background:var(--mut)"></span></div><span class="small">${(x*100).toFixed(0)}</span><span class="why">${esc(o.why[k])}${S.w[k]?"":" · peso 0"}</span>`}).join("");
-    const runs=(h.runs||[]).map(x=>`<li>${esc(x.d)} · ${esc(x.txt)} · ${x.dist.toLocaleString("es-ES")} m · ${x.cat==="FR"?"Francia":"cat. "+esc(x.cat)} · <b>${esc(x.pos)}º</b>${x.of?" de "+x.of:""}${x.kg?" · "+String(x.kg).replace(".",",")+" kg":""}</li>`).join("");
+    const li=x=>`<li>${esc(x.d)}${x.course?" · "+esc(x.course):""}${(()=>{const t=(x.auto||/^La Zarzuela, \d/.test(x.txt||""))?"":(x.txt||"").replace(/ \((San Sebastián|Francia)[^)]*\)/,"").replace(/^San Sebastián( \(.*\))?$/,"").trim(); return t?" · "+esc(t):"";})()}${x.dist?" · "+x.dist.toLocaleString("es-ES")+" m":""}${x.cat&&x.cat!=="FR"?" · cat. "+esc(x.cat):""} · <b>${esc(x.pos)}º</b>${x.of?" de "+x.of:""}${x.g!=null?" · "+GOING[x.g]:""}${x.kg?" · "+String(x.kg).replace(".",",")+" kg":""}</li>`;
+    const hl=(h.hist||[]).map(li).join(""), ol=(h.older||[]).map(li).join("");
+    const runs=`<p class="small" style="margin:10px 0 4px"><b>Últimas carreras en los últimos 3 meses (desde el 31/08, cualquier hipódromo) — son las que cuentan para forma y distancia</b></p>`+
+      (hl?`<ul class="runs" style="margin-top:0">${hl}</ul>`:`<p class="small" style="margin:0">${h.lastOld?`Ninguna: no corre desde el ${esc(h.lastOld)}.`:h.form.length?`No encontradas con fecha; se usa la forma del programa (${esc(h.form.join("-"))}) con la mitad de peso.`:"Debutante."}</p>`)+
+      (ol?`<p class="small" style="margin:10px 0 4px">Anteriores o sin fecha (solo para terreno y como referencia)</p><ul class="runs" style="margin-top:0">${ol}</ul>`:"");
     const evc=v.ev==null?"":`<span class="ev ${v.ev>0?"pos":"neg"}">${v.ev>0?"+":""}${(v.ev*100).toFixed(0)} %</span>`;
     return `<tr class="row" tabindex="0" data-no="${h.no}" aria-expanded="${isO}"><td class="n">${i+1}</td><td><span style="display:flex;gap:8px;align-items:center">${cloth(h.no)}<span><span class="hn">${esc(h.name)}</span> <span class="small">${esc(h.eq||"")}</span><br><span class="small">${h.age} años · ${esc(h.c)}</span></span></span></td><td>${esc(h.jn)}<br><span class="small">${esc(tname(h.t))}</span></td><td class="n">${h.draw}</td><td class="n">${String(h.kg).replace(".",",")}</td><td class="fm">${h.form.length?esc(h.form.join("-")):"debuta"}<br><span class="small">${h.form.length>1?regLabel(o.sig):"sin datos"}</span></td><td class="n"><b>${pct(o.p)}</b><br><span class="small">podio ${pct(o.p3)}</span></td><td class="n">${dec(v.fair)}<br><span class="small">valor ≥ ${dec(v.minOdd)}</span></td><td class="n"><input class="odd" type="number" inputmode="decimal" step="0.1" min="1" id="od-${r.n}-${h.no}" data-no="${h.no}" value="${odds[h.no]??""}" placeholder="cuota" aria-label="Cuota de ${esc(h.name)}"></td><td class="n">${evc}</td></tr>`+
-    (isO?`<tr class="det"><td colspan="10">${h.note?`<p style="margin:0 0 10px"><b>${esc(h.note)}</b></p>`:""}<div class="fac">${fac}</div>${runs?`<ul class="runs">${runs}</ul>`:`<p class="small" style="margin:10px 0 0">Sin carreras anteriores encontradas.</p>`}</td></tr>`:"");}).join("");
+    (isO?`<tr class="det"><td colspan="10">${h.note?`<p style="margin:0 0 10px"><b>${esc(h.note)}</b></p>`:""}<div class="fac">${fac}</div>${runs}</td></tr>`:"");}).join("");
   const presetOpts=PRESETS.map(p=>`<option value="${p.id}" ${S.preset===p.id?"selected":""}>${esc(p.label)}</option>`).join("")+`<option value="custom" ${S.preset==="custom"?"selected":""}>Personalizados</option>`;
   const sl=FKEYS.map(k=>`<label class="sl" for="w-${k}"><span>${FNAMES[k]}</span><input type="range" id="w-${k}" data-k="${k}" min="0" max="50" value="${S.w[k]}"><span class="n">${S.w[k]}</span></label>`).join("");
   const scr=r.horses.map(h=>`<button class="scr" data-scr="${h.no}" aria-pressed="${sc.has(h.no)}">${cloth(h.no)}${esc(h.name.replace(/ \(.*\)/,""))}</button>`).join("");
