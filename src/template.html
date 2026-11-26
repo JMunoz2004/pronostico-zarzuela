@@ -84,8 +84,8 @@ input[type=range]{width:100%;min-height:40px;accent-color:var(--turf)}
 .dh h3{font:600 22px "Barlow Condensed";margin:18px 0 8px}.dh tbody.g tr:first-child td{border-top:2px solid var(--line)}.dh td.hn2{white-space:nowrap}.dh .tot{color:var(--mut);font-size:13px}
 .tabsbar{display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}.tabsbar .tabs{position:static;border:0;flex:1;min-width:0}
 .simbtn{flex:none;margin-right:max(5vw,16px);min-height:44px;padding:0 16px;border-radius:8px;border:0;background:var(--turf);color:#fff;font:600 16px Barlow;cursor:pointer}
-.simmodal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:12px}.simmodal[hidden]{display:none}
-.simbox{background:var(--card);color:var(--ink);border-radius:14px;max-width:1200px;width:100%;max-height:96vh;overflow:auto;padding:14px 16px}
+.simmodal{display:block;padding:12px max(5vw,16px);background:var(--soft);border-bottom:1px solid var(--line)}.simmodal[hidden]{display:none}
+.simbox{background:var(--card);color:var(--ink);border-radius:14px;max-width:1200px;margin:0 auto;padding:14px 16px;border:1px solid var(--line)}
 .simhead{display:flex;justify-content:space-between;align-items:center;gap:10px}.simctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
 .simbody{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:12px}@media(max-width:800px){.simbody{grid-template-columns:1fr}}
 #simCanvas{width:100%;height:auto;border-radius:10px;background:#2f6b3a}
@@ -109,7 +109,7 @@ a{color:light-dark(#1f6b3f,#8fd3a6)}.scroll{overflow-x:auto}
 <button class="btn" id="resetAll" style="color:#fff;border-color:#6d8f7a">Borrar datos del día</button>
 </div></div></header>
 <div class="tabsbar"><nav class="tabs" id="tabs" role="tablist" aria-label="Carreras"></nav><button class="simbtn" id="simOpen" title="Simulación gráfica de la carrera seleccionada">▶ Simulación</button></div>
-<div id="simModal" class="simmodal" hidden role="dialog" aria-modal="true" aria-labelledby="simTitle"><div class="simbox">
+<div id="simModal" class="simmodal" hidden role="region" aria-labelledby="simTitle"><div class="simbox">
 <div class="simhead"><h2 class="cond" id="simTitle" style="margin:0;font-size:26px"></h2><button class="btn" id="simClose" aria-label="Cerrar">✕</button></div>
 <div class="simctl"><button class="btn" id="simPlay">⏸ Pausa</button><button class="btn" id="simAgain">↻ Otra simulación</button>
 <label class="sel" for="simSpeed">Velocidad <select id="simSpeed"><option value="1">x1 (tiempo real)</option><option value="3">x3</option><option value="6" selected>x6</option><option value="12">x12</option></select></label>
@@ -488,7 +488,8 @@ function simLoop(ts){ if(!SIM.run) return; if(SIM.last!=null) SIM.t+=(ts-SIM.las
   SIM.last=ts; if(SIM.t>=SIM.T+4){ SIM.done=true; SIM.run=false; simDraw(); document.getElementById("simPlay").textContent="▶ Repetir"; return; }
   if(SIM.t>=SIM.T) SIM.done=SIM.t>=SIM.T+3.5; simDraw(); SIM.raf=requestAnimationFrame(simLoop); }
 function simStart(){ cancelAnimationFrame(SIM.raf); simSetup(); SIM.run=true; SIM.last=null; document.getElementById("simPlay").textContent="⏸ Pausa"; SIM.raf=requestAnimationFrame(simLoop); }
-function simOpen(){ const m=document.getElementById("simModal"); m.hidden=false; document.getElementById("simDir").value=S.simDir||"R"; simStart(); document.getElementById("simClose").focus(); }
+function simOpen(){ const m=document.getElementById("simModal"); m.hidden=false; document.getElementById("simDir").value=S.simDir||"R"; simStart();
+  try{ m.scrollIntoView({behavior:"smooth",block:"start"}); }catch(e){ m.scrollIntoView(); } document.getElementById("simPlay").focus({preventScroll:true}); }
 function simClose(){ SIM.run=false; cancelAnimationFrame(SIM.raf); document.getElementById("simModal").hidden=true; document.getElementById("simOpen").focus(); }
 const CAT_COLS=[["LI","Listed int."],["LL","Listed local"],["A","Cat. A"],["B","Cat. B"],["C","Cat. C"],["D","Cat. D"],["EXT","Extranjero"],["NA","Sin categoría"]];
 function cats(){ const races=(S.cScope||"race")==="all"?RACESX:RACESX.filter(x=>x.n===S.cur);
@@ -507,8 +508,8 @@ function cats(){ const races=(S.cScope||"race")==="all"?RACESX:RACESX.filter(x=>
 }
 function all(){tabs();race();sum();pickCtl();dhist();cats();ped(); if(PK){ PK=null; document.getElementById("pick").innerHTML=`<p class="small">Algo ha cambiado (bajas, llegadas, tiempo o pesos): pulsa «Calcular» de nuevo.</p>`; } }
 document.getElementById("base").value=S.base;
-document.addEventListener("click",e=>{ const id=e.target.id;
-  if(id==="simOpen"){ simOpen(); return; } if(id==="simClose"||id==="simModal"){ simClose(); return; } if(id==="simAgain"){ simStart(); return; }
+document.addEventListener("click",e=>{ const id=e.target.id; if(e.target.closest&&e.target.closest(".tab")&&!document.getElementById("simModal").hidden) setTimeout(simStart,0);
+  if(id==="simOpen"){ simOpen(); return; } if(id==="simClose"){ simClose(); return; } if(id==="simAgain"){ simStart(); return; }
   if(id==="simPlay"){ if(SIM.done){ simStart(); return; } SIM.run=!SIM.run; e.target.textContent=SIM.run?"⏸ Pausa":"▶ Seguir"; if(SIM.run){ SIM.last=null; SIM.raf=requestAnimationFrame(simLoop); } return; }
   if(e.target.id==="pkGo"){ e.target.textContent="Calculando…"; setTimeout(()=>{ pickCalc(); e.target.textContent="Calcular"; },30); return; } if(e.target.id==="dAny"){ S.dr={...dRange(),min:800,max:5000,auto:false}; save(); dhist(); return; } if(e.target.id==="dReset"){ S.dr={...dRange(),auto:true}; save(); dhist(); return; } const t=e.target.closest(".tab"); if(t){S.cur=+t.dataset.n; open.clear(); save(); all(); return;}
   const s=e.target.closest("[data-scr]"); if(s){const n=S.cur, no=+s.dataset.scr, set=scrSet(n); set.has(no)?set.delete(no):set.add(no); S.scr[n]=[...set]; save(); tabs(); race(); sum(); document.querySelector(`[data-scr="${no}"]`)?.focus(); return;}
