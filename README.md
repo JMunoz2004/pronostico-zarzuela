@@ -49,6 +49,10 @@ analysis/rivales.js     señal de cada factor por separado
 
 Para generar la página en local: `node train.js && python3 build.py`. Para ver la app: `pip install -r requirements.txt && streamlit run app.py`.
 
+## Usarla sin cobertura (móvil)
+
+La página también se publica en **https://jmunoz2004.github.io/pronostico-zarzuela/** (GitHub Pages: Settings → Pages → Deploy from a branch → `main` / raíz). Ábrela una vez con conexión y añádela a la pantalla de inicio (Android/Chrome: menú ⋮ → «Instalar aplicación» o «Añadir a pantalla de inicio»; iPhone/Safari: compartir → «Añadir a pantalla de inicio»). Desde entonces abre sin conexión: todo el cálculo se hace en el móvil y lo que escribes (bajas, tiempo, cuotas, llegadas) se guarda en él. Arriba indica si estás usando la copia guardada y de cuándo son los datos. Streamlit, en cambio, necesita conexión.
+
 ## Publicar en Streamlit Community Cloud
 
 1. Entra en [share.streamlit.io](https://share.streamlit.io) con tu cuenta de GitHub.

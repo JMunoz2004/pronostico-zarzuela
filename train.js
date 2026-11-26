@@ -74,7 +74,7 @@ for(const k of ["h2","s2","h3","s3"]) g[k]/=g.n;
 console.log("GEMELAS/TRIOS (log-pérdida media, menos es mejor):",JSON.stringify(g));
 
 const final=rows[rows.length-1];
-const out={GOING,CARTA,TRAIN:train,JORNADAS:J,J0,RUNS_EXTRA,TRAINED:{rows,summary,combo:g,final:{W:final.W,T:final.T}}};
+const out={built:new Date().toISOString(),GOING,CARTA,TRAIN:train,JORNADAS:J,J0,RUNS_EXTRA,TRAINED:{rows,summary,combo:g,final:{W:final.W,T:final.T}}};
 fs.writeFileSync("src/generated.js",`// Generado por train.js a partir de datos/ — no editar a mano.
 const GEN = ${JSON.stringify(out)};
 if (typeof module!=="undefined") module.exports={GEN};

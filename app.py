@@ -28,6 +28,8 @@ with st.sidebar:
     st.header("Datos cargados")
     st.write(f"**Carta:** {carta.get('hipodromo', 'La Zarzuela')}, {carta['fecha']} · {len(carta['carreras'])} carreras")
     st.write(f"**Jornadas de entrenamiento:** {len(jornadas)} ({jornadas[0]} → {jornadas[-1]})" if jornadas else "Sin jornadas")
+    st.markdown("**Sin cobertura en el hipódromo:** abre [la versión instalable](https://jmunoz2004.github.io/pronostico-zarzuela/) "
+                "y añádela a la pantalla de inicio; funciona sin conexión.")
     st.download_button("Descargar la página (index.html)", html_path.read_bytes(), "pronostico-zarzuela.html", "text/html")
     st.caption("Tus bajas, tiempo, cuotas y llegadas se guardan en este navegador.")
 
